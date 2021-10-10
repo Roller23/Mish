@@ -157,20 +157,6 @@ std::string CVM::stringify(Value &val) {
 
 // stdlib
 
-class NativeInput : public NativeFunction {
-  public:
-    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
-      if (args.size() != 0) {
-        ErrorHandler::throw_runtime_error("input() doesn't take any arguments", line);
-      }
-      Value str;
-      str.type = Utils::STR;
-      str.string_value = "";
-      std::getline(std::cin, str.string_value);
-      return str;
-    }
-};
-
 class NativePrint : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -302,13 +288,15 @@ class NativeTodouble : public NativeFunction {
     }
 };
 
-class NativeExit : public NativeFunction {
+class NativeAbort : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
-      if (args.size() != 1 || args[0].type != Utils::INT) {
-        ErrorHandler::throw_runtime_error("exit() expects one argument (int)", line);
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        ErrorHandler::throw_runtime_error("abort() expects one argument (string)", line);
       }
-      std::exit(args[0].number_value);
+      VM.aborted_early = true;
+      VM.abort_message = args[0].string_value;
+      VM.output_buffer += args[0].string_value;
       return {};
     }
 };
@@ -674,14 +662,13 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(41);
+  globals.reserve(40);
   ADD_FN(NativeTimestamp, timestamp)
-  ADD_FN(NativeInput, input)
   ADD_FN(NativePrint, print)
   ADD_FN(NativePrintln, println)
   ADD_FN(NativeFlush, flush)
   ADD_FN(NativeTostr, to_str)
-  ADD_FN(NativeExit, exit)
+  ADD_FN(NativeAbort, abort)
   ADD_FN(NativeToint, to_int)
   ADD_FN(NativeTodouble, to_double)
   ADD_FN(NativeSize, size)

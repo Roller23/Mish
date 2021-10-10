@@ -259,6 +259,7 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
         const SharedRpnElement fn = res_stack.back();
         res_stack.pop_back();
         res_stack.emplace_back(SHARE_RPN(execute_function(*fn, token)));
+        if (VM.aborted_early) return {};
       } else if (token.op.op_type == Operator::INDEX) {
         const SharedRpnElement arr = res_stack.back();
         res_stack.pop_back();
@@ -881,6 +882,7 @@ RpnElement Evaluator::execute_function(RpnElement &fn, const RpnElement &call) {
     }
     VM.trace.push(fn.value.reference_name, current_line, current_source);
     const Value &return_val = global_it->second->execute(call_args, current_line, VM);
+    if (VM.aborted_early) return {};
     VM.trace.pop();
     return {return_val};
   }
