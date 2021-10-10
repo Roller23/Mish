@@ -12,6 +12,8 @@
 #include <sstream>
 #include <fstream>
 
+#include "../ckript/src/interpreter.hpp"
+
 #define HEADERS_END "\r\n\r\n"
 #define HTTP_200 "HTTP/1.0 200 OK"
 #define HTTP_404 "HTTP/1.0 404 Not Found"
@@ -31,6 +33,10 @@ static std::vector<std::string> split(const std::string &str, char delim) {
     out.push_back(str.substr(start, end - start));
   }
   return out;
+}
+
+bool has_suffix(const std::string &str, const std::string &suffix) {
+  return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 static std::string read_file(const std::string &path) {
@@ -119,6 +125,10 @@ static void serve_http(const int port) {
       // send 404 back
       write_ok_res("bye bye", client_fd);
       continue;
+    }
+    if (has_suffix(requested_resource, ".ck")) {
+      // run the interpreter
+      Interpreter().process_file(requested_resource, 0, nullptr);
     }
     const std::string &resource_str = read_file(requested_resource);
     write_ok_res(resource_str, client_fd);

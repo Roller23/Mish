@@ -7,7 +7,7 @@ ckript_build := ckript/build/
 input := ckript/examples/hash_table.ck
 
 srv:
-	$(CC) $(flags) -o mish server/main.cpp
+	$(CC) $(flags) -o mish server/main.cpp $(ckript_src)*.cpp
 
 compile:
 	@mkdir -p $(ckript_build)
