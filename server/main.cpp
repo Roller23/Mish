@@ -18,7 +18,7 @@
 typedef struct sockaddr SA;
 typedef struct sockaddr_in SA_IN;
 
-static std::vector<std::string> tokenize(const std::string &str, char delim) {
+static std::vector<std::string> split(const std::string &str, char delim) {
   std::size_t start;
   std::size_t end = 0;
   std::vector<std::string> out;
@@ -75,12 +75,12 @@ static void serve_http(const int port) {
     std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
     int r = read(client_fd, buffer, REQUEST_BUFFER_SIZE - 1);
     std::string data = buffer;
-    const std::vector<std::string> &request_lines = tokenize(data, '\n');
-    const std::vector<std::string> &request = tokenize(request_lines[0], ' ');
+    const std::vector<std::string> &request_lines = split(data, '\n');
+    const std::vector<std::string> &request = split(request_lines[0], ' ');
     const std::string &method = request[0];
     const std::string &path = request[1];
     const std::string &full_request = method + " " + path;
-    const std::vector<std::string> &components = tokenize(full_request, '?');
+    const std::vector<std::string> &components = split(full_request, '?');
     if (components.size() > 2) {
       // more than two "?" found
       // malformed request
