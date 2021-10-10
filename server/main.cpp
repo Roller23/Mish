@@ -92,8 +92,8 @@ static std::string process_code(const std::string &path) {
     auto last = resource_str.find("&>");
     const std::string &code = resource_str.substr(first + 2, last - first - 2);
     std::cout << "code: " << code << std::endl;
-    interpreter.process_string(code);
-    resource_str = resource_str.replace(first, last - first + 2, "");
+    const std::string &code_output = interpreter.process_string(code);
+    resource_str = resource_str.replace(first, last - first + 2, code_output);
     std::cout << "resource string: " << resource_str << std::endl;
   }
   return "";

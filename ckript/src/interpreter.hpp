@@ -12,7 +12,7 @@ class Interpreter {
     Utils utils;
     Evaluator *evaluator = nullptr;
   public:
-    void process_string(const std::string &code);
+    std::string process_string(const std::string &code);
 };
 
 #endif // __INTERPRETER_
