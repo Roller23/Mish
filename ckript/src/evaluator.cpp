@@ -40,18 +40,21 @@ typedef std::vector<SharedRpnElement> SharedRpnStack;
 void Evaluator::throw_error(const std::string &cause) {
   if (current_source != nullptr) {
     std::cout << "(" << *current_source << ") ";
+    VM.error_buffer += "(" + *current_source + ") ";
   }
   std::cout << "Runtime error: " << cause << " (line " << current_line << ")\n";
-  if (VM.trace.stack.size() == 0) std::exit(EXIT_FAILURE);
+  VM.error_buffer += "Runtime error: " + cause + " (line " + std::to_string(current_line) + ")<br>";
+  VM.aborted_with_error = true;
+  VM.aborted_early = true;
+  if (VM.trace.stack.size() == 0) return;
   std::vector<Value> args;
   VM.globals.at("stack_trace")->execute(args, current_line, VM);
-  std::exit(EXIT_FAILURE);
 }
 
 void Evaluator::start() {
   for (const auto &statement : AST.children) {
     int flag = execute_statement(statement);
-    if (flag == FLAG_ABORT) return;
+    if (flag == FLAG_ABORT || flag == FLAG_ERROR) return;
     if (flag == FLAG_RETURN) break;
   }
   if (return_value.type == VarType::UNKNOWN) {
@@ -97,16 +100,19 @@ int Evaluator::execute_statement(const Node &statement) {
   } else if (statement.stmt.type == StmtType::BREAK) {
     if (!nested_loops) {
       throw_error("break statement outside of loops is illegal");
+      return FLAG_ERROR;
     }
     return FLAG_BREAK;
   } else if (statement.stmt.type == StmtType::CONTINUE) {
     if (!nested_loops) {
       throw_error("continue statement outside of loops is illegal");
+      return FLAG_ERROR;
     }
     return FLAG_CONTINUE;
   } else if (statement.stmt.type == StmtType::RETURN) {
     if (!inside_func) {
       throw_error("return statement outside of functions is illegal");
+      return FLAG_ERROR;
     }
     const NodeList &return_expr = statement.stmt.expressions[0];
     if (statement.stmt.expressions.size() != 0 && return_expr.size() != 0) {
@@ -118,6 +124,7 @@ int Evaluator::execute_statement(const Node &statement) {
     if (statement.stmt.statements.size() == 0) return FLAG_OK; // might cause bugs
     if (statement.stmt.expressions[0].size() == 0) {
       throw_error("while expects an expression");
+      return FLAG_ERROR;
     }
     nested_loops++;
     while (true) {
@@ -125,6 +132,7 @@ int Evaluator::execute_statement(const Node &statement) {
       if (result.type != VarType::BOOL) {
         const std::string &msg = "Expected a boolean value in while statement, found " + stringify(result);
         throw_error(msg);
+        return FLAG_ERROR;
       }
       if (VM.aborted_early) return FLAG_ABORT;
       if (!result.boolean_value) break;
@@ -139,6 +147,7 @@ int Evaluator::execute_statement(const Node &statement) {
     if (statement.stmt.expressions.size() != 3) {
       std::string given = std::to_string(statement.stmt.expressions.size());
       throw_error("For expects 3 expressions, " + given + " given");
+      return FLAG_ERROR;
     }
     if (statement.stmt.statements.size() == 0) return FLAG_OK; // might cause bugs
     if (statement.stmt.expressions[0].size() != 0) {
@@ -154,6 +163,7 @@ int Evaluator::execute_statement(const Node &statement) {
         if (result.type != VarType::BOOL) {
           const std::string &msg = "Expected a boolean value in while statement, found " + stringify(result);
           throw_error(msg);
+          return FLAG_ERROR;
         }
         if (VM.aborted_early) return FLAG_ABORT;
         if (!result.boolean_value) break;
@@ -175,11 +185,13 @@ int Evaluator::execute_statement(const Node &statement) {
     assert(statement.stmt.expressions.size() != 0);
     if (statement.stmt.expressions[0].size() == 0) {
       throw_error("if expects an expression");
+      return FLAG_ERROR;
     }
     const Value &result = evaluate_expression(statement.stmt.expressions[0]);
     if (result.type != VarType::BOOL) {
       const std::string &msg = "Expected a boolean value in if statement, found " + stringify(result);
       throw_error(msg);
+      return FLAG_ERROR;
     }
     if (VM.aborted_early) return FLAG_ABORT;
     if (result.boolean_value) {
@@ -212,6 +224,7 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
           if (res_stack.size() < 2) {
             const std::string &msg = "Operator " + Token::get_name(token.op.type) + " expects two operands"; 
             throw_error(msg);
+            return {};
           }
           const SharedRpnElement y = res_stack.back();
           res_stack.pop_back();
@@ -248,11 +261,13 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
           REG(XOR_ASSIGN, xor_assign) {
             const std::string &msg = "Unknown binary operator " + Token::get_name(token.op.type);
             throw_error(msg);
+            return {};
           }
         } else if (utils.op_unary(token.op.type)) {
           if (res_stack.size() < 1) {
             const std::string &msg = "Operator " + Token::get_name(token.op.type) + " expects one operand"; 
             throw_error(msg);
+            return {};
           }
           const SharedRpnElement x = res_stack.back();
           res_stack.pop_back();
@@ -265,6 +280,7 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
           } else {
             const std::string &msg = "Unknown unary operator " + Token::get_name(token.op.type);
             throw_error(msg);
+            return {};
           }
         }
       } else if (token.op.op_type == Operator::FUNC) {
@@ -288,16 +304,19 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
       if (var == nullptr) {
         const std::string &msg = "'" + res_val.reference_name + "' is not defined";
         throw_error(msg);
+        return {};
       }
       if (var->val.heap_reference != -1) {
         return var->val;
       } else {
         throw_error("Expression expected to be a reference");
+        return {};
       }
     } else if (res_val.heap_reference != -1) {
       return res_val;
     } else {
       throw_error("Expression expected to be a reference");
+      return {};
     }
   }
   if (res_val.is_lvalue() || res_val.heap_reference > -1) {
@@ -354,7 +373,7 @@ RpnElement Evaluator::logical_not(const RpnElement &x) {
     val.boolean_value = !x_val.boolean_value;
     return {val};
   }
-  throw_error("Cannot perform logical not on " + stringify(x_val) + "\n");
+  throw_error("Cannot perform logical not on " + stringify(x_val));
   return {};
 }
 
@@ -366,7 +385,7 @@ RpnElement Evaluator::Evaluator::bitwise_not(const RpnElement &x) {
     val.number_value = ~x_val.number_value;
     return {val};
   }
-  throw_error("Cannot perform bitwise not on " + stringify(x_val) + "\n");
+  throw_error("Cannot perform bitwise not on " + stringify(x_val));
   return {};
 }
 

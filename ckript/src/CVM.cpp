@@ -617,12 +617,15 @@ class NativeStacktrace : public NativeFunction {
       for (auto crumb = VM.trace.stack.rbegin(); crumb != VM.trace.stack.rend(); crumb++) {
         if (printed > limit) {
           std::cout << "    and " << (VM.trace.stack.size() - printed) << " more\n";
+          VM.error_buffer += "    and " + std::to_string(VM.trace.stack.size() - printed) + " more<br>";
           break;
         }
-        std::string name = crumb->name.size() == 0 ? "<anonymous function>" : "function '" + crumb->name + "'";
+        const std::string &name = crumb->name.size() == 0 ? "<anonymous function>" : "function '" + crumb->name + "'";
         std::cout << "  in " << name << " called on line " << crumb->line;
+        VM.error_buffer += "  in " + name + " called on line " + std::to_string(crumb->line);
         if (crumb->source != nullptr) {
           std::cout << " in file " << *crumb->source;
+          VM.error_buffer += " in file " + *crumb->source;
         }
         std::cout << std::endl;
         printed++;

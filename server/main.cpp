@@ -92,6 +92,10 @@ static std::string process_code(const std::string &path) {
     auto last = resource_str.find("&>");
     const std::string &code = resource_str.substr(first + 2, last - first - 2);
     const std::string &code_output = interpreter.process_string(code);
+    if (interpreter.VM.aborted_with_error) {
+      resource_str = interpreter.VM.error_buffer;
+      break;
+    }
     if (interpreter.VM.aborted_early) {
       resource_str = resource_str.replace(first, resource_str.length(), code_output);
       break; 

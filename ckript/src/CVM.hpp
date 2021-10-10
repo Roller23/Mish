@@ -108,8 +108,10 @@ class CVM {
     Heap heap;
     StackTrace trace;
     std::string output_buffer = "";
+    std::string error_buffer = "";
+    std::string abort_message = "";
     bool aborted_early = false;
-    std::string abort_message;
+    bool aborted_with_error = false;
     CVM(void) {
       load_stdlib();
     }
