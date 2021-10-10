@@ -8,10 +8,10 @@
 
 class Interpreter {
   private:
-    CVM VM;
     Utils utils;
     Evaluator *evaluator = nullptr;
   public:
+    CVM VM;
     std::string process_string(const std::string &code);
 };
 
