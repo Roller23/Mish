@@ -107,6 +107,7 @@ class CVM {
     std::unordered_map<std::string, NativeFunction *> globals;
     Heap heap;
     StackTrace trace;
+    std::string output_buffer = "";
     CVM(void) {
       load_stdlib();
     }

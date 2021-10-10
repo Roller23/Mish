@@ -194,9 +194,14 @@ class NativePrintln : public NativeFunction {
       const std::size_t end_index = args.size() - 1;
       for (auto &arg : args) {
         std::printf("%s%s", VM.stringify(arg).c_str(), i != end_index ? " " : "");
+        VM.output_buffer += VM.stringify(arg);
+        if (i != end_index) {
+          VM.output_buffer += " ";
+        }
         i++;
       }
       std::printf("\n");
+      VM.output_buffer += "\n";
       return {Utils::VOID};
     }
 };

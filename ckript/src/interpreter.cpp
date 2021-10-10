@@ -11,9 +11,10 @@ std::string Interpreter::process_string(const std::string &code) {
   if (evaluator == nullptr) {
     evaluator = new Evaluator(AST, VM, utils);
   } else {
+    VM.output_buffer = "";
     evaluator->AST = AST;
   }
   evaluator->stack.reserve(100);
-  const std::string &output = evaluator->start();
-  return output;
+  evaluator->start();
+  return VM.output_buffer;
 }

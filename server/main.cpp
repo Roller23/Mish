@@ -91,12 +91,10 @@ static std::string process_code(const std::string &path) {
     if (first == std::string::npos) break;
     auto last = resource_str.find("&>");
     const std::string &code = resource_str.substr(first + 2, last - first - 2);
-    std::cout << "code: " << code << std::endl;
     const std::string &code_output = interpreter.process_string(code);
     resource_str = resource_str.replace(first, last - first + 2, code_output);
-    std::cout << "resource string: " << resource_str << std::endl;
   }
-  return "";
+  return resource_str;
 }
 
 static void serve_http(const int port) {
@@ -144,7 +142,6 @@ static void serve_http(const int port) {
     }
     if (has_suffix(requested_resource, ".ck")) {
       // run the interpreter
-      // Interpreter().process_file(requested_resource, 0, nullptr);
       const std::string &resource_str = process_code(requested_resource);
       write_ok_res(resource_str, client_fd);
       continue;

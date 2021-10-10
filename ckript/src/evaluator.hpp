@@ -42,7 +42,6 @@ typedef std::vector<RpnElement> RpnStack;
 class Evaluator {
   private:
     NativeFunction *native_bind = nullptr;
-    std::string output_buffer = "";
   public:
     CVM &VM;
     Node &AST;
@@ -52,7 +51,7 @@ class Evaluator {
       VM(_VM),
       AST(_AST), 
       utils(_utils) {};
-    std::string start();
+    void start();
   private:
     bool inside_func = false;
     bool returns_ref = false;

@@ -47,7 +47,7 @@ void Evaluator::throw_error(const std::string &cause) {
   std::exit(EXIT_FAILURE);
 }
 
-std::string Evaluator::start() {
+void Evaluator::start() {
   for (const auto &statement : AST.children) {
     int flag = execute_statement(statement);
     if (flag == FLAG_RETURN) {
@@ -57,7 +57,6 @@ std::string Evaluator::start() {
   if (return_value.type == VarType::UNKNOWN) {
     return_value.type = VarType::VOID;
   }
-  return output_buffer;
 }
 
 int Evaluator::execute_statement(const Node &statement) {
