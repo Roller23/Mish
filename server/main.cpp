@@ -7,6 +7,10 @@
 
 #include <iostream>
 #include <vector>
+#include <filesystem>
+#include <string>
+#include <sstream>
+#include <fstream>
 
 #define HEADERS_END "\r\n\r\n"
 #define HTTP_200 "HTTP/1.0 200 OK"
@@ -27,6 +31,19 @@ static std::vector<std::string> split(const std::string &str, char delim) {
     out.push_back(str.substr(start, end - start));
   }
   return out;
+}
+
+static std::string read_file(const std::string &path) {
+  std::ifstream t(path);
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  return buffer.str();
+}
+
+static bool resource_exists(const std::string &path) {
+  if (!std::filesystem::exists(path)) return false;
+  if (std::filesystem::is_directory(path)) return false;
+  return true;
 }
 
 static std::string generate_ok_res(const std::string &content) {
@@ -64,6 +81,7 @@ static void serve_http(const int port) {
   int socket_fd = create_server_socket(port);
   listen(socket_fd, MAX_CONNECTIONS);
   std::cout << "Listening on port " << port << "...\n";
+  const std::string &current_path = std::filesystem::current_path().string();
   while (true) {
     SA client_info;
     socklen_t info_len;
@@ -80,16 +98,30 @@ static void serve_http(const int port) {
     const std::string &method = request[0];
     const std::string &path = request[1];
     const std::string &full_request = method + " " + path;
-    const std::vector<std::string> &components = split(full_request, '?');
-    if (components.size() > 2) {
+    const std::vector<std::string> &components = split(path, '?');
+    const std::size_t components_size = components.size();
+    if (components_size > 2) {
       // more than two "?" found
       // malformed request
       // write_404_res(client_fd);
       write_ok_res("Bye bye", client_fd);
       continue;
     }
+    const std::string &request_path = components[0];
+    const std::string &requested_resource = current_path + request_path;
+    bool has_query = components_size == 2;
+    if (has_query) {
+      // TODO
+    }
     std::cout << "full request " << full_request << std::endl;
-    write_ok_res("Hi", client_fd);
+    std::cout << "requested resource " << requested_resource << std::endl;
+    if (!resource_exists(requested_resource)) {
+      // send 404 back
+      write_ok_res("bye bye", client_fd);
+      continue;
+    }
+    const std::string &resource_str = read_file(requested_resource);
+    write_ok_res(resource_str, client_fd);
   }
 }
 

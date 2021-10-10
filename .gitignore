@@ -3,3 +3,5 @@ main
 mish
 build
 bin
+.vscode
+public_html
