@@ -1,14 +1,8 @@
 #include "interpreter.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "CVM.hpp"
 #include "token.hpp"
 #include "evaluator.hpp"
-#include "utils.hpp"
-
-#include <string>
-#include <iostream>
-#include <memory>
 
 void Interpreter::process_string(const std::string &code, int argc, char *argv[]) {
   TokenList tokens = Lexer().tokenize(code);
