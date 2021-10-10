@@ -10,24 +10,37 @@
 #include <iostream>
 #include <memory>
 
-void Interpreter::process_file(const std::string &filename, int argc, char *argv[]) {
-  Lexer lexer;
-  Utils utils;
-  TokenList tokens = lexer.process_file(filename);
+// void Interpreter::process_file(const std::string &filename, int argc, char *argv[]) {
+//   Lexer lexer;
+//   Utils utils;
+//   TokenList tokens = lexer.process_file(filename);
+//   Parser parser(tokens, Token::TokenType::NONE, "", utils);
+//   Node AST = parser.parse(NULL);
+//   CVM VM;
+//   Evaluator evaluator(AST, VM, utils);
+//   evaluator.stack.reserve(100);
+//   // pass the "arguments" array
+//   auto &var = (evaluator.stack["argv"] = std::make_shared<Variable>());
+//   var->type = Utils::ARR;
+//   var->val.array_type = "str";
+//   var->val.type = Utils::ARR;
+//   var->val.array_values.resize(argc);
+//   for (int i = 0; i < argc; i++) {
+//     var->val.array_values[i].type = Utils::STR;
+//     var->val.array_values[i].string_value = argv[i];
+//   }
+//   evaluator.start();
+// }
+
+void Interpreter::process_string(const std::string &code, int argc, char *argv[]) {
+  TokenList tokens = Lexer().tokenize(code);
   Parser parser(tokens, Token::TokenType::NONE, "", utils);
-  const Node &AST = parser.parse(NULL);
-  CVM VM;
-  Evaluator evaluator(AST, VM, utils);
-  evaluator.stack.reserve(100);
-  // pass the "arguments" array
-  auto &var = (evaluator.stack["argv"] = std::make_shared<Variable>());
-  var->type = Utils::ARR;
-  var->val.array_type = "str";
-  var->val.type = Utils::ARR;
-  var->val.array_values.resize(argc);
-  for (int i = 0; i < argc; i++) {
-    var->val.array_values[i].type = Utils::STR;
-    var->val.array_values[i].string_value = argv[i];
+  Node AST = parser.parse(NULL);
+  if (evaluator == nullptr) {
+    evaluator = new Evaluator(AST, VM, utils);
+  } else {
+    evaluator->AST = AST;
   }
-  evaluator.start();
+  evaluator->stack.reserve(100);
+  evaluator->start();
 }

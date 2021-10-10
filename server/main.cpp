@@ -83,6 +83,22 @@ static int create_server_socket(const int port) {
   return socket_fd;
 }
 
+static std::string process_code(const std::string &path) {
+  std::string resource_str = read_file(path);
+  Interpreter interpreter;
+  while (true) {
+    auto first = resource_str.find("<&");
+    if (first == std::string::npos) break;
+    auto last = resource_str.find("&>");
+    const std::string &code = resource_str.substr(first + 2, last - first - 2);
+    std::cout << "code: " << code << std::endl;
+    interpreter.process_string(code, 0, nullptr);
+    resource_str = resource_str.replace(first, last - first + 2, "");
+    std::cout << "resource string: " << resource_str << std::endl;
+  }
+  return "";
+}
+
 static void serve_http(const int port) {
   int socket_fd = create_server_socket(port);
   listen(socket_fd, MAX_CONNECTIONS);
@@ -128,7 +144,10 @@ static void serve_http(const int port) {
     }
     if (has_suffix(requested_resource, ".ck")) {
       // run the interpreter
-      Interpreter().process_file(requested_resource, 0, nullptr);
+      // Interpreter().process_file(requested_resource, 0, nullptr);
+      const std::string &resource_str = process_code(requested_resource);
+      write_ok_res(resource_str, client_fd);
+      continue;
     }
     const std::string &resource_str = read_file(requested_resource);
     write_ok_res(resource_str, client_fd);

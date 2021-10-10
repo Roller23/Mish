@@ -44,10 +44,10 @@ class Evaluator {
     NativeFunction *native_bind = nullptr;
   public:
     CVM &VM;
-    const Node &AST;
+    Node &AST;
     Utils &utils;
     CallStack stack;
-    Evaluator(const Node &_AST, CVM &_VM, Utils &_utils) : 
+    Evaluator(Node &_AST, CVM &_VM, Utils &_utils) : 
       VM(_VM),
       AST(_AST), 
       utils(_utils) {};
