@@ -1,7 +1,6 @@
 #include "parser.hpp"
 #include "AST.hpp"
 #include "token.hpp"
-#include "error-handler.hpp"
 
 #include <vector>
 #include <iostream>
@@ -14,7 +13,7 @@ typedef Node::NodeType NodeType;
 typedef Token::TokenType TokenType;
 
 void Parser::throw_error(const std::string &cause, std::uint32_t line) {
-  ErrorHandler::throw_syntax_error(cause, line);
+  VM.throw_syntax_error(cause, line);
 }
 
 void Parser::fail_if_EOF(TokenType expected) {
@@ -121,11 +120,11 @@ ParamList Parser::parse_func_params(bool is_class) {
       }
       if (res.size() != 0) {
         std::string msg = "invalid function expression, illegal void placement";
-        ErrorHandler::throw_syntax_error(msg);
+        throw_error(msg, curr_token.line);
       }
       if (curr_token.type != Token::RIGHT_PAREN) {
         std::string msg = "invalid function expression, expected ), but " + curr_token.get_name() + " found";
-        ErrorHandler::throw_syntax_error(msg);
+        throw_error(msg, curr_token.line);
       }
       return res;
     }
@@ -199,7 +198,7 @@ Node Parser::parse_func_expr() {
   }
   int func_end = find_block_end();
   TokenList func_start(tokens.begin() + pos, tokens.begin() + pos + func_end + 1); // create a subvector of tokens
-  Parser func_parser(func_start, Token::NONE, "", utils);
+  Parser func_parser(func_start, Token::NONE, "", utils, VM);
   int end_pos = 0;
   func.expr.func_expr.instructions.push_back(func_parser.parse(&end_pos));
   pos += end_pos;
@@ -350,7 +349,7 @@ Node Parser::get_expr_node() {
     return rpn_expr;
   }
   std::string msg = "expected an expression, but " + curr_token.get_name() + " found";
-  ErrorHandler::throw_syntax_error(msg, curr_token.line);
+  throw_error(msg, curr_token.line);
   return {};
 }
 
@@ -400,7 +399,7 @@ NodeList Parser::get_expression(TokenType stop1, TokenType stop2) {
         stack.pop_back();
       } else {
         std::string msg = "no enclosing parenthesis";
-        ErrorHandler::throw_syntax_error(msg, curr_token.line);
+        throw_error(msg, curr_token.line);
       }
     }
   }
@@ -500,7 +499,7 @@ Node Parser::get_statement(Node &prev, TokenType stop) {
     advance(); // skip the {
     int block_end = find_enclosing_brace(pos, 1);
     TokenList block_start(tokens.begin() + pos, tokens.begin() + pos + block_end + 1); // create a subvector of tokens
-    Parser block_parser(block_start, Token::RIGHT_BRACE, "", utils);
+    Parser block_parser(block_start, Token::RIGHT_BRACE, "", utils, VM);
     int end_pos = 0;
     comp.stmt.statements.push_back(block_parser.parse(&end_pos));
     pos += end_pos;
@@ -582,7 +581,7 @@ Node Parser::get_statement(Node &prev, TokenType stop) {
     advance(); // skip the break
     if (curr_token.type != Token::SEMI_COLON) {
       std::string msg = "expected ';', but " + curr_token.get_name() + " found";
-      ErrorHandler::throw_syntax_error(msg);
+      throw_error(msg, curr_token.line);
     }
     advance(); // skip the ;
     Node break_stmt = Statement((StmtType::BREAK));
@@ -595,7 +594,7 @@ Node Parser::get_statement(Node &prev, TokenType stop) {
     advance(); // skip the continue
     if (curr_token.type != Token::SEMI_COLON) {
       std::string msg = "expected ';', but " + curr_token.get_name() + " found";
-      ErrorHandler::throw_syntax_error(msg);
+      throw_error(msg, curr_token.line);
     }
     advance(); // skip the ;
     Node continue_stmt = Statement((StmtType::CONTINUE));

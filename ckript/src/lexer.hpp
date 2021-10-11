@@ -2,6 +2,8 @@
 #define __LEXER_
 
 #include "token.hpp"
+#include "CVM.hpp"
+
 #include <string>
 #include <fstream>
 #include <vector>
@@ -15,6 +17,7 @@ class Lexer {
     bool verbose = false;
     static const char **builtin_types;
     static int types_count;
+    Lexer(CVM &_VM) : VM(_VM) {}
   private:
     bool contains(const std::string &str, const char needle) const;
     bool valid_number(const std::string &str, int base) const;
@@ -35,6 +38,7 @@ class Lexer {
     std::string file_dir = "";
     std::string *file_name = new std::string;
     TokenList tokens;
+    CVM &VM;
 };
 
 #endif // __LEXER

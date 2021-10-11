@@ -91,16 +91,17 @@ static std::string process_code(const std::string &path) {
     if (first == std::string::npos) break;
     auto last = resource_str.find("&>");
     const std::string &code = resource_str.substr(first + 2, last - first - 2);
-    const std::string &code_output = interpreter.process_string(code);
-    if (interpreter.VM.aborted_with_error) {
-      resource_str = interpreter.VM.error_buffer;
+    try {
+      const std::string &code_output = interpreter.process_string(code);
+      if (interpreter.VM.aborted_early) {
+        resource_str = resource_str.replace(first, resource_str.length(), code_output);
+        break; 
+      }
+      resource_str = resource_str.replace(first, last - first + 2, code_output);
+    } catch (const std::runtime_error& e) {
+      resource_str = "<body>" + interpreter.VM.error_buffer + "</body>";
       break;
     }
-    if (interpreter.VM.aborted_early) {
-      resource_str = resource_str.replace(first, resource_str.length(), code_output);
-      break; 
-    }
-    resource_str = resource_str.replace(first, last - first + 2, code_output);
   }
   return resource_str;
 }

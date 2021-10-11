@@ -4,18 +4,21 @@
 #include "token.hpp"
 #include "AST.hpp"
 #include "utils.hpp"
+#include "CVM.hpp"
+
 #include <vector>
 #include <cstdint>
 #include <cstring>
 
 class Parser {
   public:
-    Parser(TokenList &_tokens, Token::TokenType _terminal, const std::string &_name, Utils &_utils) : 
+    Parser(TokenList &_tokens, Token::TokenType _terminal, const std::string &_name, Utils &_utils, CVM &_VM) : 
       tokens(_tokens),
       curr_token(_tokens.size() ? _tokens.at(0) : Token()),
       tokens_count(_tokens.size()),
       terminal(_terminal),
       parser_name(_name),
+      VM(_VM),
       utils(_utils) {
         std::memset(base_lut, 0, sizeof(base_lut));
         base_lut[Token::TokenType::BINARY] = 2;
@@ -40,6 +43,7 @@ class Parser {
     NodeList get_many_statements(Node &prev, Token::TokenType stop);
     char base_lut[200];
   private:
+    CVM &VM;
     Utils &utils;
     TokenList &tokens;
     Token prev;

@@ -1,5 +1,5 @@
 #include "lexer.hpp"
-#include "error-handler.hpp"
+
 #include <iterator>
 #include <fstream>
 #include <iostream>
@@ -81,7 +81,7 @@ void Lexer::add_token(Token::TokenType type, const std::string &val) {
 void Lexer::add_unknown_token(std::string str) {
   log("token [UNKNOWN: " + str + "], ");
   add_token(Token::UNKNOWN, str);
-  ErrorHandler::throw_syntax_error("(" + *file_name + ") unknown token '" + str + "'", current_line);
+  VM.throw_syntax_error("(" + *file_name + ") unknown token '" + str + "'", current_line);
 }
 
 void Lexer::add_char_token(const char c) {
@@ -121,14 +121,14 @@ TokenList Lexer::tokenize(const std::string &code) {
           consume_whitespace();
           c = *ptr;
           if (!(c == '"' || c == '\'' || c == '`') || ptr == end || ptr + 1 == end) {
-            ErrorHandler::throw_syntax_error("(" + *file_name + ") expected a string literal after include", current_line);
+            VM.throw_syntax_error("(" + *file_name + ") expected a string literal after include", current_line);
           }
           ptr++;
           std::string path = file_dir + "/";
           while (*ptr != c && ptr != end) {
             path += *(ptr++);
           }
-          TokenList toks = Lexer().process_file(path);
+          TokenList toks = Lexer(VM).process_file(path);
           tokens.insert(tokens.end(), toks.begin(), toks.end());
         } else if (token_str == "function") {
           log("token [FUNCTION], ");
@@ -338,7 +338,7 @@ TokenList Lexer::process_file(const std::string &filename) {
   *file_name = filename;
   std::ifstream file(filename);
   if (!file) {
-    ErrorHandler::throw_file_error("Couldn't open " + filename);
+    VM.throw_file_error("Couldn't open " + filename);
   }
   std::int64_t pos = filename.find_last_of("/\\");
   if (pos != -1) {
