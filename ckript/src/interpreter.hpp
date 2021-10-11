@@ -12,7 +12,7 @@ class Interpreter {
     Evaluator *evaluator = nullptr;
   public:
     CVM VM;
-    std::string process_string(const std::string &code);
+    void process_string(const std::string &code);
 };
 
 #endif // __INTERPRETER_

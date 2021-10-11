@@ -92,14 +92,14 @@ static std::string process_code(const std::string &path) {
     auto last = resource_str.find("&>");
     const std::string &code = resource_str.substr(first + 2, last - first - 2);
     try {
-      const std::string &code_output = interpreter.process_string(code);
-      if (interpreter.VM.aborted_early) {
-        resource_str = resource_str.replace(first, resource_str.length(), code_output);
-        break; 
-      }
-      resource_str = resource_str.replace(first, last - first + 2, code_output);
+      interpreter.process_string(code);
+      resource_str = resource_str.replace(first, last - first + 2, interpreter.VM.output_buffer);
     } catch (const std::runtime_error& e) {
-      resource_str = "<body>" + interpreter.VM.error_buffer + "</body>";
+      if (std::string(e.what()) == "ckript abort()") {
+        resource_str = resource_str.replace(first, resource_str.length(), interpreter.VM.output_buffer);
+      } else {
+        resource_str = "<body>" + interpreter.VM.error_buffer + "</body>";
+      }
       break;
     }
   }

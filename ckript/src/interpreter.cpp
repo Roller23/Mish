@@ -4,7 +4,7 @@
 #include "token.hpp"
 #include "evaluator.hpp"
 
-std::string Interpreter::process_string(const std::string &code) {
+void Interpreter::process_string(const std::string &code) {
   TokenList tokens = Lexer(VM).tokenize(code);
   Parser parser(tokens, Token::TokenType::NONE, "", utils, VM);
   Node AST = parser.parse(NULL);
@@ -16,5 +16,4 @@ std::string Interpreter::process_string(const std::string &code) {
   }
   evaluator->stack.reserve(100);
   evaluator->start();
-  return VM.output_buffer;
 }

@@ -12,7 +12,6 @@
 #define FLAG_CONTINUE 2
 #define FLAG_RETURN 3
 #define FLAG_ERROR 4
-#define FLAG_ABORT 5
 
 typedef Statement::StmtType StmtType;
 typedef Utils::VarType VarType;
@@ -54,7 +53,6 @@ void Evaluator::throw_error(const std::string &cause) {
 void Evaluator::start() {
   for (const auto &statement : AST.children) {
     int flag = execute_statement(statement);
-    if (flag == FLAG_ABORT) return;
     if (flag == FLAG_RETURN) break;
   }
   if (return_value.type == VarType::UNKNOWN) {
@@ -70,25 +68,20 @@ int Evaluator::execute_statement(const Node &statement) {
   } else if (statement.stmt.type == StmtType::EXPR) {
     if (statement.stmt.expressions.size() != 1) return FLAG_OK;
     evaluate_expression(statement.stmt.expressions[0]);
-    if (VM.aborted_early) return FLAG_ABORT;
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::CLASS) {
     register_class(statement.stmt.class_stmt);
-    if (VM.aborted_early) return FLAG_ABORT;
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::SET) {
     if (statement.stmt.expressions.size() == 0) return FLAG_OK; // might break something
     set_member(statement.stmt.obj_members, statement.stmt.expressions[0]);
-    if (VM.aborted_early) return FLAG_ABORT;
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::SET_IDX) {
     set_index(statement.stmt);
-    if (VM.aborted_early) return FLAG_ABORT;
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::DECL) {
     if (statement.stmt.declaration.size() != 1) return FLAG_OK;
     declare_variable(statement.stmt.declaration[0]);
-    if (VM.aborted_early) return FLAG_ABORT;
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::COMPOUND) {
     if (statement.stmt.statements.size() == 0) return FLAG_OK;
@@ -129,10 +122,8 @@ int Evaluator::execute_statement(const Node &statement) {
         const std::string &msg = "Expected a boolean value in while statement, found " + stringify(result);
         throw_error(msg);
       }
-      if (VM.aborted_early) return FLAG_ABORT;
       if (!result.boolean_value) break;
       int flag = execute_statement(statement.stmt.statements[0]);
-      if (VM.aborted_early) return FLAG_ABORT;
       if (flag == FLAG_BREAK) break;
       if (flag == FLAG_RETURN) return flag;
     }
@@ -146,7 +137,6 @@ int Evaluator::execute_statement(const Node &statement) {
     if (statement.stmt.statements.size() == 0) return FLAG_OK; // might cause bugs
     if (statement.stmt.expressions[0].size() != 0) {
       evaluate_expression(statement.stmt.expressions[0]);
-      if (VM.aborted_early) return FLAG_ABORT;
     }
     nested_loops++;
     const NodeList &cond = statement.stmt.expressions[1];
@@ -158,17 +148,14 @@ int Evaluator::execute_statement(const Node &statement) {
           const std::string &msg = "Expected a boolean value in while statement, found " + stringify(result);
           throw_error(msg);
         }
-        if (VM.aborted_early) return FLAG_ABORT;
         if (!result.boolean_value) break;
       }
       int flag = execute_statement(statement.stmt.statements[0]);
-      if (VM.aborted_early) return FLAG_ABORT;
       if (flag == FLAG_BREAK) break;
       if (flag == FLAG_RETURN) return flag;
       const NodeList &increment_expr = statement.stmt.expressions[2];
       if (increment_expr.size() != 0) {
         evaluate_expression(increment_expr);
-        if (VM.aborted_early) return FLAG_ABORT;
       }
     }
     nested_loops--;
@@ -184,7 +171,6 @@ int Evaluator::execute_statement(const Node &statement) {
       const std::string &msg = "Expected a boolean value in if statement, found " + stringify(result);
       throw_error(msg);
     }
-    if (VM.aborted_early) return FLAG_ABORT;
     if (result.boolean_value) {
       int flag = execute_statement(statement.stmt.statements[0]);
       if (flag) return flag;
@@ -274,7 +260,6 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
         const SharedRpnElement fn = res_stack.back();
         res_stack.pop_back();
         res_stack.emplace_back(SHARE_RPN(execute_function(*fn, token)));
-        if (VM.aborted_early) return {};
       } else if (token.op.op_type == Operator::INDEX) {
         const SharedRpnElement arr = res_stack.back();
         res_stack.pop_back();
@@ -897,7 +882,6 @@ RpnElement Evaluator::execute_function(RpnElement &fn, const RpnElement &call) {
     }
     VM.trace.push(fn.value.reference_name, current_line, current_source);
     const Value &return_val = global_it->second->execute(call_args, current_line, VM);
-    if (VM.aborted_early) return {};
     VM.trace.pop();
     return {return_val};
   }
@@ -1006,10 +990,6 @@ RpnElement Evaluator::execute_function(RpnElement &fn, const RpnElement &call) {
   const std::string &fn_name = fn.value.is_lvalue() ? fn.value.reference_name : fn_value.func_name;
   VM.trace.push(fn_name, current_line, current_source);
   func_evaluator.start();
-  if (func_evaluator.VM.aborted_early) {
-    VM.aborted_early = true;
-    return {};
-  }
   if (fn_value.func.ret_ref) {
     if (func_evaluator.return_value.heap_reference == -1) {
       const std::string &msg = "function returns a reference, but " + stringify(func_evaluator.return_value) + " was returned";

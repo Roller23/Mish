@@ -316,9 +316,9 @@ class NativeAbort : public NativeFunction {
       if (args.size() != 1 || args[0].type != Utils::STR) {
         VM.throw_runtime_error("abort() expects one argument (string)", line);
       }
-      VM.aborted_early = true;
       VM.abort_message = args[0].string_value;
       VM.output_buffer += args[0].string_value;
+      throw std::runtime_error("ckript abort()");
       return {};
     }
 };
