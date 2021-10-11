@@ -179,6 +179,23 @@ std::string CVM::stringify(Value &val) {
 
 // stdlib
 
+class NativeEcho : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() == 0) {
+        VM.throw_runtime_error("echo() expects at least one argument", line);
+      }
+      std::size_t i = 0;
+      const std::size_t end_index = args.size() - 1;
+      for (auto &arg : args) {
+        VM.output_buffer += VM.stringify(arg);
+        if (i != end_index) VM.output_buffer += " ";
+        i++;
+      }
+      return {Utils::VOID};
+    }
+};
+
 class NativePrint : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -202,14 +219,9 @@ class NativePrintln : public NativeFunction {
       const std::size_t end_index = args.size() - 1;
       for (auto &arg : args) {
         std::printf("%s%s", VM.stringify(arg).c_str(), i != end_index ? " " : "");
-        VM.output_buffer += VM.stringify(arg);
-        if (i != end_index) {
-          VM.output_buffer += " ";
-        }
         i++;
       }
       std::printf("\n");
-      VM.output_buffer += "\n";
       return {Utils::VOID};
     }
 };
@@ -319,7 +331,6 @@ class NativeAbort : public NativeFunction {
       VM.abort_message = args[0].string_value;
       VM.output_buffer += args[0].string_value;
       throw std::runtime_error("ckript abort()");
-      return {};
     }
 };
 
@@ -687,8 +698,9 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(40);
+  globals.reserve(41);
   ADD_FN(NativeTimestamp, timestamp)
+  ADD_FN(NativeEcho, echo)
   ADD_FN(NativePrint, print)
   ADD_FN(NativePrintln, println)
   ADD_FN(NativeFlush, flush)
