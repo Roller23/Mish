@@ -18,6 +18,9 @@
 #define HTTP_200 "HTTP/1.0 200 OK"
 #define HTTP_404 "HTTP/1.0 404 Not Found"
 
+#define CKRIPT_START "<&"
+#define CKRIPT_END "&>"
+
 #define REQUEST_BUFFER_SIZE (1024 * 10)
 #define MAX_CONNECTIONS 1000
 
@@ -35,8 +38,8 @@ static std::vector<std::string> split(const std::string &str, char delim) {
   return out;
 }
 
-bool has_suffix(const std::string &str, const std::string &suffix) {
-  return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+bool has_suffix(const std::string &str, const std::string &suf) {
+  return str.size() >= suf.size() && str.compare(str.size() - suf.size(), suf.size(), suf) == 0;
 }
 
 static std::string read_file(const std::string &path) {
@@ -54,9 +57,6 @@ static bool resource_exists(const std::string &path) {
 
 static std::string generate_ok_res(const std::string &content) {
   std::string response = HTTP_200;
-  // for (const auto &it : headers) {
-  //   response += "\n" + it.first + ": " + it.second;
-  // }
   response += HEADERS_END;
   response += content;
   return response;
@@ -86,14 +86,15 @@ static int create_server_socket(const int port) {
 static std::string process_code(const std::string &path) {
   std::string resource_str = read_file(path);
   Interpreter interpreter;
+  const auto tag_size = sizeof(CKRIPT_START) - 1;
   while (true) {
-    auto first = resource_str.find("<&");
+    auto first = resource_str.find(CKRIPT_START);
     if (first == std::string::npos) break;
-    auto last = resource_str.find("&>");
-    const std::string &code = resource_str.substr(first + 2, last - first - 2);
+    auto last = resource_str.find(CKRIPT_END);
+    const std::string &code = resource_str.substr(first + tag_size, last - first - tag_size);
     try {
       interpreter.process_string(code);
-      resource_str = resource_str.replace(first, last - first + 2, interpreter.VM.output_buffer);
+      resource_str = resource_str.replace(first, last - first + tag_size, interpreter.VM.output_buffer);
     } catch (const std::runtime_error& e) {
       if (std::string(e.what()) == "ckript abort()") {
         resource_str = resource_str.replace(first, resource_str.length(), interpreter.VM.output_buffer);
