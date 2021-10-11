@@ -85,7 +85,6 @@ void Heap::free(std::int64_t ref) {
 }
 
 void CVM::throw_generic_error(const std::string &cause, std::uint32_t line) {
-  aborted_with_error = true;
   std::cout << cause;
   error_buffer += cause;
   if (line != 0) {

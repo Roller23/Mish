@@ -43,8 +43,6 @@ void Evaluator::throw_error(const std::string &cause) {
   }
   std::cout << "Runtime error: " << cause << " (line " << current_line << ")\n";
   VM.error_buffer += "Runtime error: " + cause + " (line " + std::to_string(current_line) + ")<br>";
-  VM.aborted_with_error = true;
-  VM.aborted_early = true;
   if (VM.trace.stack.size() == 0) {
     throw std::runtime_error("ckript error");
   }

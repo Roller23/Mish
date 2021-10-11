@@ -111,7 +111,6 @@ class CVM {
     std::string error_buffer = "";
     std::string abort_message = "";
     bool aborted_early = false;
-    bool aborted_with_error = false;
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
