@@ -201,12 +201,11 @@ class NativeRender : public NativeFunction {
     if (args.size() != 1 || args[0].type != Utils::STR) {
         VM.throw_runtime_error("render() expects one argument (str)", line);
       }
-      const auto &current_path = std::filesystem::current_path();
-      const std::string &new_path_str = current_path.string() + VM.source_path.parent_path().string();
-      const auto &new_path = std::filesystem::path(new_path_str);
-      std::filesystem::current_path(new_path);
-      std::ifstream f(args[0].string_value);
-      std::filesystem::current_path(current_path);
+      const std::string &current_path = std::filesystem::current_path().string();
+      const std::string &source_path_parent = VM.source_path.parent_path().string();
+      const std::string &actual_path = current_path + source_path_parent + "/" + args[0].string_value;
+      // TODO: check if actual path is safe
+      std::ifstream f(actual_path);
       if (!f.good()) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
