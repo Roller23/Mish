@@ -196,6 +196,27 @@ class NativeEcho : public NativeFunction {
     }
 };
 
+class NativeRender : public NativeFunction {
+  Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+    if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("render() expects one argument (str)", line);
+      }
+      const auto &current_path = std::filesystem::current_path();
+      const std::string &new_path_str = current_path.string() + VM.source_path.parent_path().string();
+      const auto &new_path = std::filesystem::path(new_path_str);
+      std::filesystem::current_path(new_path);
+      std::ifstream f(args[0].string_value);
+      std::filesystem::current_path(current_path);
+      if (!f.good()) {
+        VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
+      }
+      std::stringstream buffer;
+      buffer << f.rdbuf();
+      VM.output_buffer += buffer.str();
+      return {Utils::VOID};
+  }
+};
+
 class NativePrint : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -698,9 +719,10 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(41);
+  globals.reserve(42);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
+  ADD_FN(NativeRender, render)
   ADD_FN(NativePrint, print)
   ADD_FN(NativePrintln, println)
   ADD_FN(NativeFlush, flush)

@@ -338,7 +338,7 @@ TokenList Lexer::tokenize(const std::string &code) {
 TokenList Lexer::process_file(const std::string &filename) {
   *file_name = filename;
   std::ifstream file(filename);
-  if (!file) {
+  if (!file.good()) {
     VM.throw_file_error("Couldn't open " + filename);
   }
   std::int64_t pos = filename.find_last_of("/\\");
@@ -354,5 +354,4 @@ void Lexer::set_filename(const std::string &filename) {
   const auto &path = std::filesystem::path(filename).lexically_normal();
   *file_name = path.string();
   file_dir = path.parent_path().string();
-  std::cout << "filename set to " << *file_name << " and " << file_dir << std::endl;
 }

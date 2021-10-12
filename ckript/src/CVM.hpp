@@ -7,6 +7,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include <filesystem>
 
 #include "utils.hpp"
 #include "AST.hpp"
@@ -110,11 +111,12 @@ class CVM {
     std::string output_buffer = "";
     std::string error_buffer = "";
     std::string abort_message = "";
+    const std::filesystem::path &source_path;
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
     void throw_generic_error(const std::string &cause, std::uint32_t line = 0);
-    CVM(void) {
+    CVM(const std::filesystem::path &_source_path) : source_path(_source_path) {
       load_stdlib();
     }
 };
