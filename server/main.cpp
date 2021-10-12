@@ -84,9 +84,9 @@ static int create_server_socket(const int port) {
   return socket_fd;
 }
 
-static std::string process_code(const std::string &path) {
-  std::string resource_str = read_file(path);
-  Interpreter interpreter;
+static std::string process_code(const std::string &full_path, const std::string &relative_path) {
+  std::string resource_str = read_file(full_path);
+  Interpreter interpreter(relative_path);
   const auto tag_size = sizeof(CKRIPT_START) - 1;
   while (true) {
     auto first = resource_str.find(CKRIPT_START);
@@ -159,7 +159,8 @@ static void serve_http(const int port) {
     }
     if (path.extension() == ".ck") {
       // run the interpreter
-      write_ok_res(process_code(requested_resource), client_fd);
+      const std::string &code_output = process_code(requested_resource, request_path);
+      write_ok_res(code_output, client_fd);
       continue;
     }
     write_ok_res(read_file(requested_resource), client_fd);

@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <regex>
+#include <filesystem>
 
 #define REG(tok_str, tok_sym) if(op==#tok_str){log("token ["#tok_sym"], ");add_token(Token::tok_sym);}else
 
@@ -347,4 +348,11 @@ TokenList Lexer::process_file(const std::string &filename) {
   }
   std::string buffer(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{});
   return tokenize(buffer);
+}
+
+void Lexer::set_filename(const std::string &filename) {
+  const auto &path = std::filesystem::path(filename).lexically_normal();
+  *file_name = path.string();
+  file_dir = path.parent_path().string();
+  std::cout << "filename set to " << *file_name << " and " << file_dir << std::endl;
 }

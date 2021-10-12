@@ -10,9 +10,11 @@ class Interpreter {
   private:
     Utils utils;
     Evaluator *evaluator = nullptr;
+    const std::string &source;
   public:
     CVM VM;
     void process_string(const std::string &code);
+    Interpreter(const std::string &_source) : source(_source) {}
 };
 
 #endif // __INTERPRETER_

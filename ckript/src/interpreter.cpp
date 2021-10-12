@@ -5,7 +5,9 @@
 #include "evaluator.hpp"
 
 void Interpreter::process_string(const std::string &code) {
-  TokenList tokens = Lexer(VM).tokenize(code);
+  Lexer lexer(VM);
+  lexer.set_filename(source);
+  TokenList tokens = lexer.tokenize(code);
   Parser parser(tokens, Token::TokenType::NONE, "", utils, VM);
   Node AST = parser.parse(NULL);
   if (evaluator == nullptr) {

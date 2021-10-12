@@ -14,6 +14,7 @@ class Lexer {
   public:
     TokenList tokenize(const std::string &code);
     TokenList process_file(const std::string &filename);
+    void set_filename(const std::string &filename);
     bool verbose = false;
     static const char **builtin_types;
     static int types_count;
