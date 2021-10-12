@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -49,6 +50,10 @@ static bool resource_exists(const std::string &path) {
   if (!std::filesystem::exists(path)) return false;
   if (std::filesystem::is_directory(path)) return false;
   return true;
+}
+
+static bool safe_path(const std::filesystem::path &base, const std::filesystem::path &sub) {
+  return std::search(base.begin(), base.end(), sub.begin(), sub.end()) != base.end();
 }
 
 static std::string generate_ok_res(const std::string &content) {
@@ -107,7 +112,7 @@ static void serve_http(const int port) {
   int socket_fd = create_server_socket(port);
   listen(socket_fd, MAX_CONNECTIONS);
   std::cout << "Listening on port " << port << "...\n";
-  const std::string &current_path = std::filesystem::current_path().string();
+  const std::string &current_path = std::filesystem::current_path();
   while (true) {
     SA client_info;
     socklen_t info_len;
@@ -121,10 +126,10 @@ static void serve_http(const int port) {
     std::string data = buffer;
     const std::vector<std::string> &request_lines = split(data, '\n');
     const std::vector<std::string> &request = split(request_lines[0], ' ');
-    const std::string &method = request[0];
-    const std::string &path = request[1];
-    const std::string &full_request = method + " " + path;
-    const std::vector<std::string> &components = split(path, '?');
+    const std::string &request_method = request[0];
+    const std::string &full_request_path = request[1];
+    const std::string &full_request = request_method + " " + full_request_path;
+    const std::vector<std::string> &components = split(full_request_path, '?');
     const std::size_t components_size = components.size();
     if (components_size > 2) {
       // more than two "?" found
@@ -135,26 +140,29 @@ static void serve_http(const int port) {
     }
     const std::string &request_path = components[0];
     const std::string &requested_resource = current_path + request_path;
+    const auto &path = std::filesystem::path(requested_resource).lexically_normal();
     bool has_query = components_size == 2;
     if (has_query) {
       // TODO
     }
     std::cout << "full request " << full_request << std::endl;
-    std::cout << "requested resource " << requested_resource << std::endl;
+    // TODO: make it more robust
+    if (!safe_path(path, current_path + "/public_html")) {
+      // send 404 back
+      write_ok_res("illegal path", client_fd);
+      continue;
+    }
     if (!resource_exists(requested_resource)) {
       // send 404 back
       write_ok_res("bye bye", client_fd);
       continue;
     }
-    const auto &ext = std::filesystem::path(requested_resource).extension().string();
-    if (ext == ".ck") {
+    if (path.extension() == ".ck") {
       // run the interpreter
-      const std::string &resource_str = process_code(requested_resource);
-      write_ok_res(resource_str, client_fd);
+      write_ok_res(process_code(requested_resource), client_fd);
       continue;
     }
-    const std::string &resource_str = read_file(requested_resource);
-    write_ok_res(resource_str, client_fd);
+    write_ok_res(read_file(requested_resource), client_fd);
   }
 }
 
