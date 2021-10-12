@@ -38,10 +38,6 @@ static std::vector<std::string> split(const std::string &str, char delim) {
   return out;
 }
 
-bool has_suffix(const std::string &str, const std::string &suf) {
-  return str.size() >= suf.size() && str.compare(str.size() - suf.size(), suf.size(), suf) == 0;
-}
-
 static std::string read_file(const std::string &path) {
   std::ifstream t(path);
   std::stringstream buffer;
@@ -150,7 +146,8 @@ static void serve_http(const int port) {
       write_ok_res("bye bye", client_fd);
       continue;
     }
-    if (has_suffix(requested_resource, ".ck")) {
+    const auto &ext = std::filesystem::path(requested_resource).extension().string();
+    if (ext == ".ck") {
       // run the interpreter
       const std::string &resource_str = process_code(requested_resource);
       write_ok_res(resource_str, client_fd);
