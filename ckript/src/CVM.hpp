@@ -8,6 +8,7 @@
 #include <cstring>
 #include <memory>
 #include <filesystem>
+#include <algorithm>
 #include <mutex>
 
 #include "utils.hpp"
@@ -106,6 +107,7 @@ class CVM {
     const std::mutex &file_mutex;
     void load_stdlib(void);
   public:
+    bool safe_path(const std::filesystem::path &path) const;
     std::string actual_path(const std::string &filename) const;
     std::string stringify(Value &val);
     std::unordered_map<std::string, NativeFunction *> globals;

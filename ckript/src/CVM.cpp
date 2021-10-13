@@ -12,6 +12,7 @@
 #include <random>
 #include <cstring>
 #include <thread>
+#include <algorithm>
 
 #define REG_FN(name, fn)\
   class name : public NativeFunction {\
@@ -82,6 +83,11 @@ void Heap::free(std::int64_t ref) {
   Chunk &chunk = chunks[ref];
   chunk.used = false;
   cache.push(ref);
+}
+
+bool CVM::safe_path(const std::filesystem::path &path) const {
+  const std::filesystem::path &curr = std::filesystem::current_path();
+  return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
 std::string CVM::actual_path(const std::string &filename) const {
@@ -208,7 +214,9 @@ class NativeRender : public NativeFunction {
         VM.throw_runtime_error("render() expects one argument (str)", line);
       }
       const std::string &actual_path = VM.actual_path(args[0].string_value);
-      // TODO: check if actual path is safe
+      if (!VM.safe_path(actual_path)) {
+        VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
+      }
       std::ifstream f(actual_path);
       if (!f.good()) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
@@ -398,8 +406,12 @@ class NativeFileread : public NativeFunction {
       if (args.size() != 1 || args[0].type != Utils::STR) {
         VM.throw_runtime_error("file_read() expects one argument (str)", line);
       }
+      const std::string &actual_path = VM.actual_path(args[0].string_value);
+      if (!VM.safe_path(actual_path)) {
+        VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
+      }
       Value val(Utils::STR);
-      std::ifstream f(args[0].string_value);
+      std::ifstream f(actual_path);
       if (!f.good()) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
@@ -416,8 +428,12 @@ class NativeFilewrite : public NativeFunction {
       if (args.size() != 2 || args[0].type != Utils::STR || args[1].type != Utils::STR) {
         VM.throw_runtime_error("file_write() expects two arguments (str, str)", line);
       }
+      const std::string &actual_path = VM.actual_path(args[0].string_value);
+      if (!VM.safe_path(actual_path)) {
+        VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
+      }
       Value val(Utils::BOOL);
-      std::ofstream f(args[0].string_value);
+      std::ofstream f(actual_path);
       if (!f.good()) {
         val.boolean_value = false;
         return val;
@@ -435,8 +451,13 @@ class NativeFileexists : public NativeFunction {
       if (args.size() != 1 || args[0].type != Utils::STR) {
         VM.throw_runtime_error("file_exists() expects one argument (str)", line);
       }
+      const std::string &actual_path = VM.actual_path(args[0].string_value);
       Value val(Utils::BOOL);
-      std::ifstream f(args[0].string_value);
+      if (!VM.safe_path(actual_path)) {
+        val.boolean_value = false;
+        return val;
+      }
+      std::ifstream f(actual_path);
       val.boolean_value = f.good();
       return val;
     }
@@ -449,7 +470,12 @@ class NativeFileremove : public NativeFunction {
         VM.throw_runtime_error("file_remove() expects one argument (str)", line);
       }
       Value val(Utils::BOOL);
-      val.boolean_value = std::remove(args[0].string_value.c_str()) == 0;
+      const std::string &actual_path = VM.actual_path(args[0].string_value);
+      if (!VM.safe_path(actual_path)) {
+        val.boolean_value = false;
+        return val;
+      }
+      val.boolean_value = std::remove(actual_path.c_str()) == 0;
       return val;
     }
 };

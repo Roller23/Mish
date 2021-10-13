@@ -66,8 +66,9 @@ static bool resource_exists(const std::string &path) {
   return true;
 }
 
-static bool safe_path(const std::filesystem::path &base, const std::filesystem::path &sub) {
-  return std::search(base.begin(), base.end(), sub.begin(), sub.end()) != base.end();
+static bool safe_path(const std::filesystem::path &path) {
+  const std::filesystem::path &curr = std::filesystem::current_path();
+  return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
 static std::string generate_ok_res(const std::string &content) {
@@ -147,7 +148,7 @@ void Server::serve_http(const int port) {
     }
     std::cout << "full request " << full_request << std::endl;
     // TODO: make it more robust
-    if (!safe_path(path, current_path + "/public_html")) {
+    if (!safe_path(path)) {
       // send 404 back
       write_ok_res("illegal path", client_fd);
       continue;
