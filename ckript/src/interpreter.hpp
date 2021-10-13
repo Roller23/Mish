@@ -6,6 +6,7 @@
 
 #include <string>
 #include <filesystem>
+#include <mutex>
 
 class Interpreter {
   private:
@@ -17,11 +18,11 @@ class Interpreter {
   public:
     CVM VM;
     void process_string(const std::string &code);
-    Interpreter(const std::string &_source) :
+    Interpreter(const std::string &_source, const std::mutex &mut) :
       source(_source),
       source_path(std::filesystem::path(_source).lexically_normal()),
       source_dir(source_path.parent_path()),
-      VM(source_path) {} // might be dangerous
+      VM(source_path, mut) {} // might be dangerous
 };
 
 #endif // __INTERPRETER_

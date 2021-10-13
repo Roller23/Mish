@@ -84,9 +84,9 @@ static void write_ok_res(const std::string &content, int client) {
   close(client);
 }
 
-static std::string process_code(const std::string &full_path, const std::string &relative_path) {
+std::string Server::process_code(const std::string &full_path, const std::string &relative_path) {
   std::string resource_str = read_file(full_path);
-  Interpreter interpreter(relative_path);
+  Interpreter interpreter(relative_path, file_mutex);
   const auto tag_size = sizeof(CKRIPT_START) - 1;
   while (true) {
     auto first = resource_str.find(CKRIPT_START);

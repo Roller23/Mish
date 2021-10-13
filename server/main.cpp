@@ -17,7 +17,6 @@
 #include "src/server.hpp"
 
 int main(int argc, char *argv[]) {
-  const int port = 8080;
-  Server().serve_http(port);
+  Server().serve_http(8080);
   return 0;
 }

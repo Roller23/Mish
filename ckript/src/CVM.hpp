@@ -8,6 +8,7 @@
 #include <cstring>
 #include <memory>
 #include <filesystem>
+#include <mutex>
 
 #include "utils.hpp"
 #include "AST.hpp"
@@ -102,6 +103,7 @@ class NativeFunction;
 
 class CVM {
   private:
+    const std::mutex &file_mutex;
     void load_stdlib(void);
   public:
     std::string stringify(Value &val);
@@ -116,8 +118,10 @@ class CVM {
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
     void throw_generic_error(const std::string &cause, std::uint32_t line = 0);
-    CVM(const std::filesystem::path &_source_path) : source_path(_source_path) {
-      load_stdlib();
+    CVM(const std::filesystem::path &_source_path, const std::mutex &mut) :
+      source_path(_source_path),
+      file_mutex(mut) {
+        load_stdlib();
     }
 };
 

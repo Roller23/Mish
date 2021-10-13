@@ -10,6 +10,7 @@ class Server {
     std::mutex file_mutex;
 
   public:
+    std::string process_code(const std::string &full_path, const std::string &relative_path);
     void serve_http(const int port);
 };
 
