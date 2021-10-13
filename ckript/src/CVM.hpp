@@ -106,6 +106,7 @@ class CVM {
     const std::mutex &file_mutex;
     void load_stdlib(void);
   public:
+    std::string actual_path(const std::string &filename) const;
     std::string stringify(Value &val);
     std::unordered_map<std::string, NativeFunction *> globals;
     Heap heap;

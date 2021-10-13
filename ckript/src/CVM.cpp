@@ -84,6 +84,12 @@ void Heap::free(std::int64_t ref) {
   cache.push(ref);
 }
 
+std::string CVM::actual_path(const std::string &filename) const {
+  const std::string &current_path = std::filesystem::current_path().string();
+  const std::string &source_path_parent = source_path.parent_path().string();
+  return current_path + source_path_parent + "/" + filename;
+}
+
 void CVM::throw_generic_error(const std::string &cause, std::uint32_t line) {
   std::cout << cause;
   error_buffer += cause;
@@ -201,9 +207,7 @@ class NativeRender : public NativeFunction {
     if (args.size() != 1 || args[0].type != Utils::STR) {
         VM.throw_runtime_error("render() expects one argument (str)", line);
       }
-      const std::string &current_path = std::filesystem::current_path().string();
-      const std::string &source_path_parent = VM.source_path.parent_path().string();
-      const std::string &actual_path = current_path + source_path_parent + "/" + args[0].string_value;
+      const std::string &actual_path = VM.actual_path(args[0].string_value);
       // TODO: check if actual path is safe
       std::ifstream f(actual_path);
       if (!f.good()) {
