@@ -3,11 +3,12 @@ ckript_bin := ckript/bin/
 ckript_out := $(ckript_bin)ckript
 flags := -O3 -std=c++17
 ckript_src := ckript/src/
+server_src := server/src/
 ckript_build := ckript/build/
 input := ckript/examples/hash_table.ck
 
 srv:
-	$(CC) $(flags) -o mish server/main.cpp $(ckript_src)*.cpp
+	$(CC) $(flags) -o mish server/main.cpp $(ckript_src)*.cpp $(server_src)*.cpp
 
 compile:
 	@mkdir -p $(ckript_build)
