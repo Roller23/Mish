@@ -18,11 +18,11 @@ class Interpreter {
   public:
     CVM VM;
     void process_string(const std::string &code);
-    Interpreter(const std::string &_source, const std::mutex &mut) :
+    Interpreter(const std::string &_source, std::mutex &file_mut, std::mutex &stdout_mut) :
       source(_source),
       source_path(std::filesystem::path(_source).lexically_normal()),
       source_dir(source_path.parent_path()),
-      VM(source_path, mut) {} // might be dangerous
+      VM(source_path, file_mut, stdout_mut) {}
 };
 
 #endif // __INTERPRETER_

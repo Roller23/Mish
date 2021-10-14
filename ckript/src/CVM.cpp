@@ -217,13 +217,17 @@ class NativeRender : public NativeFunction {
       if (!VM.safe_path(actual_path)) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
+      VM.file_mutex.lock();
       std::ifstream f(actual_path);
       if (!f.good()) {
+        VM.file_mutex.unlock();
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       std::stringstream buffer;
       buffer << f.rdbuf();
       VM.output_buffer += buffer.str();
+      f.close();
+      VM.file_mutex.unlock();
       return {Utils::VOID};
   }
 };
@@ -411,13 +415,17 @@ class NativeFileread : public NativeFunction {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       Value val(Utils::STR);
+      VM.file_mutex.lock();
       std::ifstream f(actual_path);
       if (!f.good()) {
+        VM.file_mutex.unlock();
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       std::stringstream buffer;
       buffer << f.rdbuf();
       val.string_value = buffer.str();
+      f.close();
+      VM.file_mutex.unlock();
       return val;
     }
 };
@@ -433,14 +441,18 @@ class NativeFilewrite : public NativeFunction {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       Value val(Utils::BOOL);
+      VM.file_mutex.lock();
       std::ofstream f(actual_path);
       if (!f.good()) {
+        f.close();
+        VM.file_mutex.unlock();
         val.boolean_value = false;
         return val;
       }
       f << args[1].string_value;
       f.close();
       val.boolean_value = true;
+      VM.file_mutex.unlock();
       return val;
     }
 };
@@ -457,8 +469,11 @@ class NativeFileexists : public NativeFunction {
         val.boolean_value = false;
         return val;
       }
+      VM.file_mutex.lock();
       std::ifstream f(actual_path);
       val.boolean_value = f.good();
+      f.close();
+      VM.file_mutex.unlock();
       return val;
     }
 };
@@ -475,7 +490,9 @@ class NativeFileremove : public NativeFunction {
         val.boolean_value = false;
         return val;
       }
+      VM.file_mutex.lock();
       val.boolean_value = std::remove(actual_path.c_str()) == 0;
+      VM.file_mutex.unlock();
       return val;
     }
 };

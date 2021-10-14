@@ -104,7 +104,6 @@ class NativeFunction;
 
 class CVM {
   private:
-    const std::mutex &file_mutex;
     void load_stdlib(void);
   public:
     bool safe_path(const std::filesystem::path &path) const;
@@ -117,13 +116,16 @@ class CVM {
     std::string error_buffer = "";
     std::string abort_message = "";
     const std::filesystem::path &source_path;
+    std::mutex &file_mutex;
+    std::mutex &stdout_mutex;
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
     void throw_generic_error(const std::string &cause, std::uint32_t line = 0);
-    CVM(const std::filesystem::path &_source_path, const std::mutex &mut) :
+    CVM(const std::filesystem::path &_source_path, std::mutex &file_mut, std::mutex &stdout_mut) :
       source_path(_source_path),
-      file_mutex(mut) {
+      file_mutex(file_mut),
+      stdout_mutex(stdout_mut) {
         load_stdlib();
     }
 };
