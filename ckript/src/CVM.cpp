@@ -240,10 +240,12 @@ class NativePrint : public NativeFunction {
       }
       std::size_t i = 0;
       const std::size_t end_index = args.size() - 1;
+      VM.stdout_mutex.lock();
       for (auto &arg : args) {
         std::printf("%s%s", VM.stringify(arg).c_str(), i != end_index ? " " : "");
         i++;
       }
+      VM.stdout_mutex.unlock();
       return {Utils::VOID};
     }
 };
@@ -253,11 +255,13 @@ class NativePrintln : public NativeFunction {
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
       std::size_t i = 0;
       const std::size_t end_index = args.size() - 1;
+      VM.stdout_mutex.lock();
       for (auto &arg : args) {
         std::printf("%s%s", VM.stringify(arg).c_str(), i != end_index ? " " : "");
         i++;
       }
       std::printf("\n");
+      VM.stdout_mutex.unlock();
       return {Utils::VOID};
     }
 };
