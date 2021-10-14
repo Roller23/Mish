@@ -81,7 +81,7 @@ static std::string generate_ok_res(const std::string &content) {
 static void write_ok_res(const std::string &content, int client) {
   std::string response = generate_ok_res(content);
   const char *response_c = response.c_str();
-  write(client, response_c, strlen(response_c));
+  write(client, response_c, response.length());
   close(client);
 }
 
@@ -109,61 +109,71 @@ std::string Server::process_code(const std::string &full_path, const std::string
   return resource_str;
 }
 
-void Server::serve_http(const int port) {
-  int socket_fd = create_server_socket(port);
-  listen(socket_fd, MAX_CONNECTIONS);
-  std::cout << "Listening on port " << port << "...\n";
-  const std::string &current_path = std::filesystem::current_path();
+void Server::handle_client(const int client_fd) {
+  std::cout << "handling client at thread " << std::this_thread::get_id() << std::endl;
+  // char *client_ip = inet_ntoa(inaddr->sin_addr); TODO
+  char buffer[REQUEST_BUFFER_SIZE];
+  std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
+  int r = read(client_fd, buffer, REQUEST_BUFFER_SIZE - 1);
+  std::string data = buffer;
+  const std::vector<std::string> &request_lines = split(data, '\n');
+  const std::vector<std::string> &request = split(request_lines[0], ' ');
+  const std::string &request_method = request[0];
+  const std::string &full_request_path = request[1];
+  const std::string &full_request = request_method + " " + full_request_path;
+  const std::vector<std::string> &components = split(full_request_path, '?');
+  const std::size_t components_size = components.size();
+  if (components_size > 2) {
+    // more than two "?" found
+    // malformed request
+    // write_404_res(client_fd);
+    write_ok_res("Bye bye", client_fd);
+    return;
+  }
+  const std::string &request_path = components[0];
+  const std::string &requested_resource = current_path + request_path;
+  const auto &path = std::filesystem::path(requested_resource).lexically_normal();
+  bool has_query = components_size == 2;
+  if (has_query) {
+    // TODO
+  }
+  std::cout << "full request " << full_request << std::endl;
+  // TODO: make it more robust
+  if (!safe_path(path)) {
+    // send 404 back
+    write_ok_res("illegal path", client_fd);
+    return;
+  }
+  if (!resource_exists(requested_resource)) {
+    // send 404 back
+    write_ok_res("bye bye", client_fd);
+    return;
+  }
+  if (path.extension() == ".ck") {
+    // run the interpreter
+    const std::string &code_output = process_code(requested_resource, request_path);
+    write_ok_res(code_output, client_fd);
+    return;
+  }
+  write_ok_res(read_file(requested_resource), client_fd);
+}
+
+void Server::accept_connections() {
   while (true) {
     SA client_info;
     socklen_t info_len;
-    int client_fd = accept(socket_fd, (SA *)&client_info, &info_len);
-    struct sockaddr_in *inaddr = (struct sockaddr_in *)&client_info;
-    char *client_ip = inet_ntoa(inaddr->sin_addr);
-
-    char buffer[REQUEST_BUFFER_SIZE];
-    std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
-    int r = read(client_fd, buffer, REQUEST_BUFFER_SIZE - 1);
-    std::string data = buffer;
-    const std::vector<std::string> &request_lines = split(data, '\n');
-    const std::vector<std::string> &request = split(request_lines[0], ' ');
-    const std::string &request_method = request[0];
-    const std::string &full_request_path = request[1];
-    const std::string &full_request = request_method + " " + full_request_path;
-    const std::vector<std::string> &components = split(full_request_path, '?');
-    const std::size_t components_size = components.size();
-    if (components_size > 2) {
-      // more than two "?" found
-      // malformed request
-      // write_404_res(client_fd);
-      write_ok_res("Bye bye", client_fd);
-      continue;
-    }
-    const std::string &request_path = components[0];
-    const std::string &requested_resource = current_path + request_path;
-    const auto &path = std::filesystem::path(requested_resource).lexically_normal();
-    bool has_query = components_size == 2;
-    if (has_query) {
-      // TODO
-    }
-    std::cout << "full request " << full_request << std::endl;
-    // TODO: make it more robust
-    if (!safe_path(path)) {
-      // send 404 back
-      write_ok_res("illegal path", client_fd);
-      continue;
-    }
-    if (!resource_exists(requested_resource)) {
-      // send 404 back
-      write_ok_res("bye bye", client_fd);
-      continue;
-    }
-    if (path.extension() == ".ck") {
-      // run the interpreter
-      const std::string &code_output = process_code(requested_resource, request_path);
-      write_ok_res(code_output, client_fd);
-      continue;
-    }
-    write_ok_res(read_file(requested_resource), client_fd);
+    std::cout << "accepting clients\n";
+    int client_fd = accept(socket_fd, &client_info, &info_len);
+    std::cout << "accepted\n";
+    // struct sockaddr_in *inaddr = (struct sockaddr_in *)&client_info;
+    new std::thread(&Server::handle_client, this, client_fd);
   }
+}
+
+void Server::serve_http(const int port) {
+  std::cout << max_threads << " cores detected\n";
+  socket_fd = create_server_socket(port);
+  listen(socket_fd, MAX_CONNECTIONS);
+  std::cout << "Listening on port " << port << "...\n";
+  accept_connections();
 }

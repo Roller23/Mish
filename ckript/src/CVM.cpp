@@ -751,6 +751,7 @@ class NativeSleep : public NativeFunction {
       if (args[0].number_value < 0) {
         VM.throw_runtime_error("Sleep time must be greater than -1", line);
       }
+      std::cout << "sleeping thread " << std::this_thread::get_id() << std::endl; 
       std::this_thread::sleep_for(std::chrono::milliseconds(args[0].number_value));
       return {Utils::VOID};
     }
