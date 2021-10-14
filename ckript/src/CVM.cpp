@@ -99,11 +99,13 @@ std::string CVM::actual_path(const std::string &filename) const {
 void CVM::throw_generic_error(const std::string &cause, std::uint32_t line) {
   std::cout << cause;
   error_buffer += cause;
+  stdout_mutex.lock();
   if (line != 0) {
     std::cout << " (line " << line << ")";
     error_buffer += " (line " + std::to_string(line) + ")";
   }
   std::cout << std::endl;
+  stdout_mutex.unlock();
   throw std::runtime_error("ckript error");
 }
 
@@ -718,6 +720,7 @@ class NativeStacktrace : public NativeFunction {
       }
       int limit = 100;
       int printed = 0;
+      VM.stdout_mutex.lock();
       for (auto crumb = VM.trace.stack.rbegin(); crumb != VM.trace.stack.rend(); crumb++) {
         if (printed > limit) {
           std::cout << "    and " << (VM.trace.stack.size() - printed) << " more\n";
@@ -734,6 +737,7 @@ class NativeStacktrace : public NativeFunction {
         std::cout << std::endl;
         printed++;
       }
+      VM.stdout_mutex.unlock();
       return {Utils::VOID};
     }
 };

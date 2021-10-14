@@ -36,6 +36,7 @@ typedef std::vector<SharedRpnElement> SharedRpnStack;
   return {};
 
 void Evaluator::throw_error(const std::string &cause) {
+  VM.stdout_mutex.lock();
   if (current_source != nullptr) {
     std::cout << "(" << *current_source << ") ";
     VM.error_buffer += "(" + *current_source + ") ";
@@ -43,8 +44,10 @@ void Evaluator::throw_error(const std::string &cause) {
   std::cout << "Runtime error: " << cause << " (line " << current_line << ")\n";
   VM.error_buffer += "Runtime error: " + cause + " (line " + std::to_string(current_line) + ")<br>";
   if (VM.trace.stack.size() == 0) {
+    VM.stdout_mutex.unlock();
     throw std::runtime_error("ckript error");
   }
+  VM.stdout_mutex.unlock();
   std::vector<Value> args;
   VM.globals.at("stack_trace")->execute(args, current_line, VM);
   throw std::runtime_error("ckript error");
