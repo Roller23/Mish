@@ -1,7 +1,7 @@
 CC := g++
 ckript_bin := ckript/bin/
 ckript_out := $(ckript_bin)ckript
-flags := -O3 -std=c++17
+flags := -O0 -g -std=c++17
 ckript_src := ckript/src/
 server_src := server/src/
 ckript_build := ckript/build/
@@ -18,7 +18,7 @@ run:
 	./$(ckript_out) $(input)
 
 debug:
-	gdb ./$(ckript_out)
+	lldb ./mish
 
 mem:
 	valgrind --track-origins=yes ./$(ckript_out) $(input)

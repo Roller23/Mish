@@ -5,3 +5,4 @@ build
 bin
 .vscode
 public_html
+*.dSYM

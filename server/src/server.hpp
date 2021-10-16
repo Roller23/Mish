@@ -6,12 +6,10 @@
 #include <vector>
 #include <filesystem>
 
-#include "../../ckript/src/interpreter.hpp"
 #include "client.hpp"
 #include "worker.hpp"
 
 class Server {
-  friend class Worker;
   private:
     const unsigned int max_threads = std::thread::hardware_concurrency();
     const int max_connections = 1000;
@@ -20,11 +18,8 @@ class Server {
     std::mutex stdout_mutex;
     std::vector<Worker> threadpool;
     int socket_fd;
-    const std::string current_path = std::filesystem::current_path();
-    std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
     void create_server_socket(const int port);
     void accept_connections();
-    void handle_client(Client &client);
     void serve(const int port);
     void generate_threadpool(void);
     Server(void) {

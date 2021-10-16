@@ -47,6 +47,7 @@ class Response {
 
 class Client {
   friend class Server;
+  friend class Worker;
   protected:
     char *ip_addr;
     int socket_fd;
