@@ -110,7 +110,6 @@ std::string Server::process_code(const std::string &full_path, const std::string
 }
 
 void Server::handle_client(const int client_fd) {
-  std::cout << "handling client at thread " << std::this_thread::get_id() << std::endl;
   // char *client_ip = inet_ntoa(inaddr->sin_addr); TODO
   char buffer[REQUEST_BUFFER_SIZE];
   std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
@@ -162,15 +161,13 @@ void Server::accept_connections() {
   while (true) {
     SA client_info;
     socklen_t info_len;
-    std::cout << "accepting clients\n";
     int client_fd = accept(socket_fd, &client_info, &info_len);
-    std::cout << "accepted\n";
     // struct sockaddr_in *inaddr = (struct sockaddr_in *)&client_info;
     new std::thread(&Server::handle_client, this, client_fd);
   }
 }
 
-void Server::serve_http(const int port) {
+void Server::serve(const int port) {
   std::cout << max_threads << " cores detected\n";
   socket_fd = create_server_socket(port);
   listen(socket_fd, MAX_CONNECTIONS);

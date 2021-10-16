@@ -16,11 +16,20 @@ class Server {
     std::vector<std::thread> threadpool;
     int socket_fd;
     const std::string current_path = std::filesystem::current_path();
-  public:
     std::string process_code(const std::string &full_path, const std::string &relative_path);
     void accept_connections();
     void handle_client(const int client_fd);
-    void serve_http(const int port);
+    void serve(const int port);
+    Server(void) {}
+  public:
+    static void serve_http(const int port) {
+      return get().serve(port);
+    }
+    Server(const Server &) = delete;
+    static Server &get() {
+      static Server server;
+      return server;
+    }
 };
 
 #endif // __SERVER_
