@@ -35,6 +35,12 @@ void Server::create_server_socket(const int port) {
   bind(socket_fd, (sockaddr *)&address, sizeof(address));
 }
 
+void Server::generate_threadpool(void) {
+  for (unsigned int i = 0; i < max_threads; i++) {
+    threadpool.emplace_back(this);
+  }
+}
+
 static std::vector<std::string> split(const std::string &str, char delim) {
   std::size_t start;
   std::size_t end = 0;
@@ -113,7 +119,7 @@ void Server::handle_client(Client &client) {
     const std::vector<std::string> &query_pairs = split(query, '&');
     for (auto &pair : query_pairs) {
       const std::vector<std::string> pair_components = split(pair, '=');
-      if (pair_components.size() != 2) continue;
+      if (pair_components.size() != 2) continue; // TODO: return 400 or something
       client.req.query.map[pair_components[0]] = pair_components[1];
     }
   }

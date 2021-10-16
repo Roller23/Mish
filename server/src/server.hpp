@@ -8,15 +8,17 @@
 
 #include "../../ckript/src/interpreter.hpp"
 #include "client.hpp"
+#include "worker.hpp"
 
 class Server {
+  friend class Worker;
   private:
     const unsigned int max_threads = std::thread::hardware_concurrency();
     const int max_connections = 1000;
 
     std::mutex file_mutex;
     std::mutex stdout_mutex;
-    std::vector<std::thread> threadpool;
+    std::vector<Worker> threadpool;
     int socket_fd;
     const std::string current_path = std::filesystem::current_path();
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
@@ -24,7 +26,10 @@ class Server {
     void accept_connections();
     void handle_client(Client &client);
     void serve(const int port);
-    Server(void) {}
+    void generate_threadpool(void);
+    Server(void) {
+      generate_threadpool();
+    }
   public:
     static void serve_http(const int port) {
       return get().serve(port);
