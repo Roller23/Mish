@@ -14,6 +14,7 @@
 #include <fstream>
 
 #include "server.hpp"
+#include "client.hpp"
 
 #define HEADERS_END "\r\n\r\n"
 #define HTTP_200 "HTTP/1.0 200 OK"
@@ -25,20 +26,17 @@
 #define REQUEST_BUFFER_SIZE (1024 * 10)
 #define MAX_CONNECTIONS 1000
 
-typedef struct sockaddr SA;
-typedef struct sockaddr_in SA_IN;
-
 static int create_server_socket(const int port) {
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   int option = 1;
   // make the socket address reusable
   setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-  SA_IN address;
+  sockaddr_in address;
   memset(&address, 0, sizeof(address));
   address.sin_family = AF_INET;
   address.sin_port = htons(port);
   address.sin_addr.s_addr = htonl(INADDR_ANY);
-  bind(socket_fd, (SA *)&address, sizeof(address));
+  bind(socket_fd, (sockaddr *)&address, sizeof(address));
   return socket_fd;
 }
 
@@ -109,11 +107,10 @@ std::string Server::process_code(const std::string &full_path, const std::string
   return resource_str;
 }
 
-void Server::handle_client(const int client_fd) {
-  // char *client_ip = inet_ntoa(inaddr->sin_addr); TODO
+void Server::handle_client(const Client &client) {
   char buffer[REQUEST_BUFFER_SIZE];
   std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
-  int r = read(client_fd, buffer, REQUEST_BUFFER_SIZE - 1);
+  int r = read(client.socket_fd, buffer, REQUEST_BUFFER_SIZE - 1);
   std::string data = buffer;
   const std::vector<std::string> &request_lines = split(data, '\n');
   const std::vector<std::string> &request = split(request_lines[0], ' ');
@@ -126,7 +123,7 @@ void Server::handle_client(const int client_fd) {
     // more than two "?" found
     // malformed request
     // write_404_res(client_fd);
-    write_ok_res("Bye bye", client_fd);
+    write_ok_res("Bye bye", client.socket_fd);
     return;
   }
   const std::string &request_path = components[0];
@@ -140,30 +137,29 @@ void Server::handle_client(const int client_fd) {
   // TODO: make it more robust
   if (!safe_path(path)) {
     // send 404 back
-    write_ok_res("illegal path", client_fd);
+    write_ok_res("illegal path", client.socket_fd);
     return;
   }
   if (!resource_exists(requested_resource)) {
     // send 404 back
-    write_ok_res("bye bye", client_fd);
+    write_ok_res("bye bye", client.socket_fd);
     return;
   }
   if (path.extension() == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path);
-    write_ok_res(code_output, client_fd);
+    write_ok_res(code_output, client.socket_fd);
     return;
   }
-  write_ok_res(read_file(requested_resource), client_fd);
+  write_ok_res(read_file(requested_resource), client.socket_fd);
 }
 
 void Server::accept_connections() {
   while (true) {
-    SA client_info;
-    socklen_t info_len;
-    int client_fd = accept(socket_fd, &client_info, &info_len);
-    // struct sockaddr_in *inaddr = (struct sockaddr_in *)&client_info;
-    new std::thread(&Server::handle_client, this, client_fd);
+    Client client;
+    client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
+    client.ip_addr = inet_ntoa(client.info.sin_addr);
+    new std::thread(&Server::handle_client, this, client);
   }
 }
 

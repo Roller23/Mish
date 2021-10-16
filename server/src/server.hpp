@@ -7,6 +7,7 @@
 #include <filesystem>
 
 #include "../../ckript/src/interpreter.hpp"
+#include "client.hpp"
 
 class Server {
   private:
@@ -18,7 +19,7 @@ class Server {
     const std::string current_path = std::filesystem::current_path();
     std::string process_code(const std::string &full_path, const std::string &relative_path);
     void accept_connections();
-    void handle_client(const int client_fd);
+    void handle_client(const Client &client);
     void serve(const int port);
     Server(void) {}
   public:
