@@ -37,7 +37,7 @@ class Response {
     std::string output = "";
     void append(const std::string &str);
     void add_header(const std::string &key, const std::string &value);
-    void end(const std::string &str = "", const int code = Status::OK);
+    void end(const int code = Status::OK, const std::string &str = "");
     Response() {
       headers["Content-Type"] = "text/html; charset=utf-8";
       headers["Content-Length"] = "0";
@@ -56,7 +56,7 @@ class Client {
   private:
     void flush(void) const;
   public:
-    void end(const std::string &str = "", const int code = Status::OK);
+    void end(const int code = Status::OK, const std::string &str = "");
 };
 
 #endif // __CLIENT_

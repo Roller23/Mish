@@ -18,7 +18,7 @@ void Response::add_header(const std::string &key, const std::string &value) {
   headers[key] = value;
 }
 
-void Response::end(const std::string &str, const int code) {
+void Response::end(const int code, const std::string &str) {
   append(str);
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
@@ -34,7 +34,7 @@ void Client::flush(void) const {
   close(socket_fd);
 }
 
-void Client::end(const std::string &str, const int code) {
-  this->res.end(str, code);
+void Client::end(const int code, const std::string &str) {
+  this->res.end(code, str);
   this->flush();
 }

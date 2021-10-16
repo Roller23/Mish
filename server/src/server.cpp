@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <thread>
 
 #include "server.hpp"
 #include "client.hpp"
@@ -103,7 +104,7 @@ void Server::handle_client(Client &client) {
   if (components_size > 2) {
     // more than two "?" found
     // malformed request
-    return client.end("bye bye", Status::BadRequest);
+    return client.end(Status::BadRequest);
   }
   const std::string &request_path = components[0];
   const std::string &requested_resource = current_path + request_path;
@@ -122,18 +123,18 @@ void Server::handle_client(Client &client) {
   // TODO: make it more robust
   if (!safe_path(path)) {
     // send 404 back
-    return client.end("illegal path", Status::BadRequest);
+    return client.end(Status::NotFound);
   }
   if (!resource_exists(requested_resource)) {
     // send 404 back
-    return client.end("bye bye", Status::BadRequest);
+    return client.end(Status::NotFound);
   }
   if (path.extension() == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path);
-    return client.end(code_output, Status::OK);
+    return client.end(Status::OK, code_output);
   }
-  client.end(read_file(requested_resource), Status::OK);
+  client.end(Status::OK, read_file(requested_resource));
 }
 
 void Server::accept_connections() {
@@ -141,8 +142,9 @@ void Server::accept_connections() {
     Client client;
     client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
     client.ip_addr = inet_ntoa(client.info.sin_addr);
-    // new std::thread(&Server::handle_client, this, client);
-    handle_client(client);
+    new std::thread([&] {
+      Server::handle_client(client);
+    });
   }
 }
 
