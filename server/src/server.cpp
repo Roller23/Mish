@@ -21,7 +21,6 @@
 #define CKRIPT_END "&>"
 
 #define REQUEST_BUFFER_SIZE (1024 * 10)
-#define MAX_CONNECTIONS 1000
 
 void Server::create_server_socket(const int port) {
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -77,7 +76,7 @@ std::string Server::process_code(const std::string &full_path, const std::string
     try {
       interpreter.process_string(code);
       resource_str = resource_str.replace(first, last - first + tag_size, interpreter.VM.output_buffer);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::runtime_error &e) {
       if (std::string(e.what()) == "ckript abort()") {
         resource_str = resource_str.replace(first, resource_str.length(), interpreter.VM.output_buffer);
       } else {
@@ -102,7 +101,6 @@ void Server::handle_client(Client &client) {
   const std::vector<std::string> &components = split(full_request_path, '?');
   const std::size_t components_size = components.size();
   if (components_size > 2) {
-    // more than two "?" found
     // malformed request
     return client.end(Status::BadRequest);
   }
@@ -120,13 +118,10 @@ void Server::handle_client(Client &client) {
     }
   }
   std::cout << "full request " << full_request << std::endl;
-  // TODO: make it more robust
   if (!safe_path(path)) {
-    // send 404 back
     return client.end(Status::NotFound);
   }
   if (!resource_exists(requested_resource)) {
-    // send 404 back
     return client.end(Status::NotFound);
   }
   if (path.extension() == ".ck") {
@@ -151,7 +146,7 @@ void Server::accept_connections() {
 void Server::serve(const int port) {
   std::cout << max_threads << " cores detected\n";
   create_server_socket(port);
-  listen(socket_fd, MAX_CONNECTIONS);
+  listen(socket_fd, max_connections);
   std::cout << "Listening on port " << port << "...\n";
   accept_connections();
 }
