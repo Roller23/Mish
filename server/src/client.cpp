@@ -1,12 +1,12 @@
 #include "client.hpp"
 
 bool Query::has(const std::string &key) const {
-  return query.count(key) != 0;
+  return map.count(key) != 0;
 }
 
 std::string Query::get(const std::string &key) const {
   if (!has(key)) return "";
-  return query.at(key);
+  return map.at(key);
 }
 
 void Response::append(const std::string &str) {
@@ -16,6 +16,10 @@ void Response::append(const std::string &str) {
 
 void Response::add_header(const std::string &key, const std::string &value) {
   headers[key] = value;
+}
+
+const std::string &Response::get_header(const std::string &key) {
+  return headers[key];
 }
 
 void Response::end(const int code, const std::string &str) {

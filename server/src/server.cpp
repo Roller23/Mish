@@ -65,9 +65,9 @@ static bool safe_path(const std::filesystem::path &path) {
   return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
-std::string Server::process_code(const std::string &full_path, const std::string &relative_path) {
+std::string Server::process_code(const std::string &full_path, const std::string &relative_path, Client &client) {
   std::string resource_str = read_file(full_path);
-  Interpreter interpreter(relative_path, file_mutex, stdout_mutex);
+  Interpreter interpreter(relative_path, file_mutex, stdout_mutex, client);
   const auto tag_size = sizeof(CKRIPT_START) - 1;
   while (true) {
     auto first = resource_str.find(CKRIPT_START);
@@ -116,7 +116,7 @@ void Server::handle_client(Client &client) {
     for (auto &pair : query_pairs) {
       const std::vector<std::string> pair_components = split(pair, '=');
       if (pair_components.size() != 2) continue;
-      client.req.query.query[pair_components[0]] = pair_components[1];
+      client.req.query.map[pair_components[0]] = pair_components[1];
     }
   }
   std::cout << "full request " << full_request << std::endl;
@@ -131,7 +131,7 @@ void Server::handle_client(Client &client) {
   }
   if (path.extension() == ".ck") {
     // run the interpreter
-    const std::string &code_output = process_code(requested_resource, request_path);
+    const std::string &code_output = process_code(requested_resource, request_path, client);
     return client.end(Status::OK, code_output);
   }
   client.end(Status::OK, read_file(requested_resource));

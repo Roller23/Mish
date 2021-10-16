@@ -14,7 +14,7 @@
 #include "utils.hpp"
 #include "AST.hpp"
 
-// Ckript Virtual Machine
+#include "../../server/src/client.hpp"
 
 class Value {
   public:
@@ -118,14 +118,16 @@ class CVM {
     const std::filesystem::path &source_path;
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
+    Client &client;
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
     void throw_generic_error(const std::string &cause, std::uint32_t line = 0);
-    CVM(const std::filesystem::path &_source_path, std::mutex &file_mut, std::mutex &stdout_mut) :
+    CVM(const std::filesystem::path &_source_path, std::mutex &file_mut, std::mutex &stdout_mut, Client &_client) :
       source_path(_source_path),
       file_mutex(file_mut),
-      stdout_mutex(stdout_mut) {
+      stdout_mutex(stdout_mut),
+      client(_client) {
         load_stdlib();
     }
 };

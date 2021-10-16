@@ -18,7 +18,7 @@ typedef std::unordered_map<std::string, std::string> QueryMap;
 
 class Query {
   public:
-    QueryMap query;
+    QueryMap map;
     bool has(const std::string &key) const;
     std::string get(const std::string &key) const;
 };
@@ -37,6 +37,7 @@ class Response {
     std::string output = "";
     void append(const std::string &str);
     void add_header(const std::string &key, const std::string &value);
+    const std::string &get_header(const std::string &key);
     void end(const int code = Status::OK, const std::string &str = "");
     Response() {
       headers["Content-Type"] = "text/html; charset=utf-8";
@@ -51,11 +52,11 @@ class Client {
     int socket_fd;
     sockaddr_in info;
     socklen_t info_len;
-    Request req;
-    Response res;
   private:
     void flush(void) const;
   public:
+    Request req;
+    Response res;
     void end(const int code = Status::OK, const std::string &str = "");
 };
 

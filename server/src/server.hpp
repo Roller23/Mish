@@ -17,7 +17,7 @@ class Server {
     std::vector<std::thread> threadpool;
     int socket_fd;
     const std::string current_path = std::filesystem::current_path();
-    std::string process_code(const std::string &full_path, const std::string &relative_path);
+    std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
     void create_server_socket(const int port);
     void accept_connections();
     void handle_client(Client &client);

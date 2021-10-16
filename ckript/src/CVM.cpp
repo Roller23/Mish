@@ -756,6 +756,56 @@ class NativeSleep : public NativeFunction {
     }
 };
 
+class NativeGet : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("get() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = VM.client.req.query.get(args[0].string_value);
+      return res;
+    }
+};
+
+class NativePost : public NativeFunction {
+  // TODO
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("post() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = VM.client.req.query.get(args[0].string_value);
+      return res;
+    }
+};
+
+class NativeHeader : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() == 0) {
+        VM.throw_runtime_error("header() expects at least one argument (str[,str])", line);
+      }
+      if (args.size() == 1) {
+        if (args[0].type != Utils::STR) {
+          VM.throw_runtime_error("header() expects string argument (str)", line);
+        }
+        Value res(Utils::STR);
+        res.string_value = VM.client.res.get_header(args[0].string_value);
+        return res;
+      } else if (args.size() == 2) {
+        if (args[0].type != Utils::STR || args[1].type != Utils::STR) {
+          VM.throw_runtime_error("header() expects string arguments (str, str)", line);
+        }
+        VM.client.res.add_header(args[0].string_value, args[1].string_value);
+        return {Utils::VOID};
+      }
+      VM.throw_runtime_error("header(): too many arguments in function call", line);
+      return {Utils::VOID};
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -773,7 +823,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(42);
+  globals.reserve(44);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -816,4 +866,6 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeArraytype, array_type);
   ADD_FN(NativeStacktrace, stack_trace);
   ADD_FN(NativeSleep, sleep);
+  ADD_FN(NativeGet, get);
+  ADD_FN(NativeHeader, header);
 }
