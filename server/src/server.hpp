@@ -18,8 +18,9 @@ class Server {
     int socket_fd;
     const std::string current_path = std::filesystem::current_path();
     std::string process_code(const std::string &full_path, const std::string &relative_path);
+    void create_server_socket(const int port);
     void accept_connections();
-    void handle_client(const Client &client);
+    void handle_client(Client &client);
     void serve(const int port);
     Server(void) {}
   public:

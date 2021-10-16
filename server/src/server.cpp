@@ -16,18 +16,14 @@
 #include "server.hpp"
 #include "client.hpp"
 
-#define HEADERS_END "\r\n\r\n"
-#define HTTP_200 "HTTP/1.0 200 OK"
-#define HTTP_404 "HTTP/1.0 404 Not Found"
-
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
 
 #define REQUEST_BUFFER_SIZE (1024 * 10)
 #define MAX_CONNECTIONS 1000
 
-static int create_server_socket(const int port) {
-  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+void Server::create_server_socket(const int port) {
+  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   int option = 1;
   // make the socket address reusable
   setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
@@ -37,7 +33,6 @@ static int create_server_socket(const int port) {
   address.sin_port = htons(port);
   address.sin_addr.s_addr = htonl(INADDR_ANY);
   bind(socket_fd, (sockaddr *)&address, sizeof(address));
-  return socket_fd;
 }
 
 static std::vector<std::string> split(const std::string &str, char delim) {
@@ -69,20 +64,6 @@ static bool safe_path(const std::filesystem::path &path) {
   return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
-static std::string generate_ok_res(const std::string &content) {
-  std::string response = HTTP_200;
-  response += HEADERS_END;
-  response += content;
-  return response;
-}
-
-static void write_ok_res(const std::string &content, int client) {
-  std::string response = generate_ok_res(content);
-  const char *response_c = response.c_str();
-  write(client, response_c, response.length());
-  close(client);
-}
-
 std::string Server::process_code(const std::string &full_path, const std::string &relative_path) {
   std::string resource_str = read_file(full_path);
   Interpreter interpreter(relative_path, file_mutex, stdout_mutex);
@@ -107,7 +88,7 @@ std::string Server::process_code(const std::string &full_path, const std::string
   return resource_str;
 }
 
-void Server::handle_client(const Client &client) {
+void Server::handle_client(Client &client) {
   char buffer[REQUEST_BUFFER_SIZE];
   std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
   int r = read(client.socket_fd, buffer, REQUEST_BUFFER_SIZE - 1);
@@ -122,36 +103,37 @@ void Server::handle_client(const Client &client) {
   if (components_size > 2) {
     // more than two "?" found
     // malformed request
-    // write_404_res(client_fd);
-    write_ok_res("Bye bye", client.socket_fd);
-    return;
+    return client.end("bye bye", Status::BadRequest);
   }
   const std::string &request_path = components[0];
   const std::string &requested_resource = current_path + request_path;
   const auto &path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
-    // TODO
+    const std::string &query = components[1];
+    const std::vector<std::string> &query_pairs = split(query, '&');
+    for (auto &pair : query_pairs) {
+      const std::vector<std::string> pair_components = split(pair, '=');
+      if (pair_components.size() != 2) continue;
+      client.req.query.query[pair_components[0]] = pair_components[1];
+    }
   }
   std::cout << "full request " << full_request << std::endl;
   // TODO: make it more robust
   if (!safe_path(path)) {
     // send 404 back
-    write_ok_res("illegal path", client.socket_fd);
-    return;
+    return client.end("illegal path", Status::BadRequest);
   }
   if (!resource_exists(requested_resource)) {
     // send 404 back
-    write_ok_res("bye bye", client.socket_fd);
-    return;
+    return client.end("bye bye", Status::BadRequest);
   }
   if (path.extension() == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path);
-    write_ok_res(code_output, client.socket_fd);
-    return;
+    return client.end(code_output, Status::OK);
   }
-  write_ok_res(read_file(requested_resource), client.socket_fd);
+  client.end(read_file(requested_resource), Status::OK);
 }
 
 void Server::accept_connections() {
@@ -159,13 +141,14 @@ void Server::accept_connections() {
     Client client;
     client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
     client.ip_addr = inet_ntoa(client.info.sin_addr);
-    new std::thread(&Server::handle_client, this, client);
+    // new std::thread(&Server::handle_client, this, client);
+    handle_client(client);
   }
 }
 
 void Server::serve(const int port) {
   std::cout << max_threads << " cores detected\n";
-  socket_fd = create_server_socket(port);
+  create_server_socket(port);
   listen(socket_fd, MAX_CONNECTIONS);
   std::cout << "Listening on port " << port << "...\n";
   accept_connections();
