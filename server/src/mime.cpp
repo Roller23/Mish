@@ -209,7 +209,7 @@ const std::unordered_map<std::string, std::string> Mime::mime_types = {
   {".smv", "video/x-smv"},
 };
 
-std::string Mime::ext_to_mime(const std::string &ext) {
+const std::string &Mime::ext_to_mime(const std::string &ext) {
   if (mime_types.find(ext) == mime_types.end()) {
     return "text/plain";
   }

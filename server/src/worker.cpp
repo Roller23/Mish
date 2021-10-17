@@ -161,7 +161,7 @@ void Worker::handle_client(Client &client) {
     const std::string &code_output = process_code(requested_resource, request_path, client);
     return client.end(client.res.script_code, code_output);
   }
-  const std::string mime_type = Mime::ext_to_mime(ext);
+  const std::string &mime_type = Mime::ext_to_mime(ext);
   client.res.add_header("Content-Type", mime_type);
   client.end(Status::OK, read_file(requested_resource));
 }

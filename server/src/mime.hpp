@@ -8,7 +8,7 @@ class Mime {
   private:
     static const std::unordered_map<std::string, std::string> mime_types;
   public:
-    static std::string ext_to_mime(const std::string &ext);
+    static const std::string &ext_to_mime(const std::string &ext);
 };
 
 #endif // __MIME_
