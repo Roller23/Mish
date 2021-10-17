@@ -3,11 +3,11 @@
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
 
-bool Payload::has(const std::string &key) const {
+bool Map::has(const std::string &key) const {
   return map.count(key) != 0;
 }
 
-std::string Payload::get(const std::string &key) const {
+std::string Map::get(const std::string &key) const {
   if (!has(key)) return "";
   return map.at(key);
 }

@@ -37,9 +37,9 @@ static std::string &ltrim(std::string &str, const char *whitespace = " \t") {
     return str;
 }
 
-static Payload read_headers(const std::vector<std::string> &lines) {
+static Map read_headers(const std::vector<std::string> &lines) {
   if (lines.size() <= 1) return {}; 
-  Payload res;
+  Map res;
   for (std::size_t i = 1; i < lines.size(); i++) {
     if (lines[i].find(":") != std::string::npos) {
       std::vector<std::string> header_components = split(lines[i], ':');
@@ -63,6 +63,17 @@ static std::string read_body(const std::string &str, const std::size_t n = 0) {
     return str.substr(idx, n);
   }
   return str.substr(idx);
+}
+
+static Map parse_payload(const std::string &str) {
+  Map res;
+  const std::vector<std::string> &pairs = split(str, '&');
+  for (auto &pair : pairs) {
+    const std::vector<std::string> pair_components = split(pair, '=');
+    if (pair_components.size() != 2) continue; // TODO: return 400 or something
+    res.map[pair_components[0]] = pair_components[1];
+  }
+  return res;
 }
 
 static bool resource_exists(const std::string &path) {
@@ -119,6 +130,7 @@ void Worker::handle_client(Client &client) {
   if (request_method == "POST") {
     // read body
     client.req.raw_body = read_body(data, client.req.length);
+    client.req.body = parse_payload(client.req.raw_body);
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = request_method + " " + full_request_path;
@@ -133,13 +145,7 @@ void Worker::handle_client(Client &client) {
   const auto &path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
-    const std::string &query = components[1];
-    const std::vector<std::string> &query_pairs = split(query, '&');
-    for (auto &pair : query_pairs) {
-      const std::vector<std::string> pair_components = split(pair, '=');
-      if (pair_components.size() != 2) continue; // TODO: return 400 or something
-      client.req.query.map[pair_components[0]] = pair_components[1];
-    }
+    client.req.query = parse_payload(components[1]);
   }
   std::cout << "full request " << full_request << std::endl;
   if (!safe_path(path)) {

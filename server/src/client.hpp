@@ -10,19 +10,20 @@
 
 #include "status.hpp"
 
-typedef std::unordered_map<std::string, std::string> PayloadMap;
+typedef std::unordered_map<std::string, std::string> StrMap;
 
-class Payload {
+class Map {
   public:
-    PayloadMap map;
+    StrMap map;
     bool has(const std::string &key) const;
     std::string get(const std::string &key) const;
 };
 
 class Request {
   public:
-    Payload query;
-    Payload headers;
+    Map query;
+    Map headers;
+    Map body;
     std::string raw_body = "";
     std::size_t length = 0;
 };
@@ -31,7 +32,7 @@ class Response {
   friend class Worker;
   private:
     std::string buffer = "";
-    Payload headers;
+    Map headers;
   public:
     int script_code = Status::OK;
     std::string output = "";
