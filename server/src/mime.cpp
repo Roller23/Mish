@@ -168,6 +168,7 @@ const std::unordered_map<std::string, std::string> Mime::mime_types = {
   {".m1v", "video/mpeg"},
   {".m2v", "video/mpeg"},
   {".ogv", "video/ogg"},
+  {".ts", "video/mp2t"},
   {".qt", "video/quicktime"},
   {".mov", "video/quicktime"},
   {".uvh", "video/vnd.dece.hd"},
