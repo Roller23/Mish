@@ -813,11 +813,7 @@ class NativeReqheader : public NativeFunction {
         VM.throw_runtime_error("req_header() expects one argument (str)", line);
       }
       Value res(Utils::STR);
-      res.string_value = "";
-      // TODO: create get() and has()
-      if (VM.client.req.headers.count(args[0].string_value) != 0) {
-        res.string_value = VM.client.req.headers[args[0].string_value];
-      }
+      res.string_value = VM.client.req.headers.get(args[0].string_value);
       return res;
     }
 };

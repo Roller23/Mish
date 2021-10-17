@@ -37,16 +37,16 @@ static std::string &ltrim(std::string &str, const char *whitespace = " \t") {
     return str;
 }
 
-static HeadersMap read_headers(const std::vector<std::string> &lines) {
+static Payload read_headers(const std::vector<std::string> &lines) {
   if (lines.size() <= 1) return {}; 
-  HeadersMap res;
+  Payload res;
   for (std::size_t i = 1; i < lines.size(); i++) {
     if (lines[i].find(":") != std::string::npos) {
       std::vector<std::string> header_components = split(lines[i], ':');
       if (header_components.size() != 2) {
         continue; // TODO
       }
-      res[header_components[0]] = ltrim(header_components[1]);
+      res.map[header_components[0]] = ltrim(header_components[1]);
     }
     if (lines[i] == "\r") break;
   }
@@ -108,8 +108,8 @@ void Worker::handle_client(Client &client) {
   // std::cout << "buffer " << buffer << std::endl;
   const std::vector<std::string> &request_lines = split(data, '\n');
   client.req.headers = read_headers(request_lines);
-  if (client.req.headers.count("Content-Length") != 0) {
-    client.req.length = std::stoul(client.req.headers["Content-Length"]);
+  if (client.req.headers.map.count("Content-Length") != 0) {
+    client.req.length = std::stoul(client.req.headers.map["Content-Length"]);
   }
   if (client.req.length > REQUEST_BUFFER_SIZE) {
     // TODO: read the missing body parts
@@ -119,7 +119,6 @@ void Worker::handle_client(Client &client) {
   if (request_method == "POST") {
     // read body
     client.req.raw_body = read_body(data, client.req.length);
-    std::cout << "raw body: " << client.req.raw_body << std::endl;
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = request_method + " " + full_request_path;
@@ -139,7 +138,7 @@ void Worker::handle_client(Client &client) {
     for (auto &pair : query_pairs) {
       const std::vector<std::string> pair_components = split(pair, '=');
       if (pair_components.size() != 2) continue; // TODO: return 400 or something
-      client.req.query.params[pair_components[0]] = pair_components[1];
+      client.req.query.map[pair_components[0]] = pair_components[1];
     }
   }
   std::cout << "full request " << full_request << std::endl;

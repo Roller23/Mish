@@ -3,33 +3,33 @@
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
 
-bool Query::has(const std::string &key) const {
-  return params.count(key) != 0;
+bool Payload::has(const std::string &key) const {
+  return map.count(key) != 0;
 }
 
-std::string Query::get(const std::string &key) const {
+std::string Payload::get(const std::string &key) const {
   if (!has(key)) return "";
-  return params.at(key);
+  return map.at(key);
 }
 
 void Response::append(const std::string &str) {
   buffer += str;
-  headers["Content-Length"] = std::to_string(buffer.size());
+  headers.map["Content-Length"] = std::to_string(buffer.size());
 }
 
 void Response::add_header(const std::string &key, const std::string &value) {
-  headers[key] = value;
+  headers.map[key] = value;
 }
 
 const std::string &Response::get_header(const std::string &key) {
-  return headers[key];
+  return headers.map[key];
 }
 
 void Response::end(const int code, const std::string &str) {
   append(str);
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
-  for (const auto &it : headers) {
+  for (const auto &it : headers.map) {
     output += "\n" + it.first + ": " + it.second;
   }
   output += HEADERS_END;

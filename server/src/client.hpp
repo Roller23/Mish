@@ -10,20 +10,19 @@
 
 #include "status.hpp"
 
-typedef std::unordered_map<std::string, std::string> HeadersMap;
-typedef std::unordered_map<std::string, std::string> QueryMap;
+typedef std::unordered_map<std::string, std::string> PayloadMap;
 
-class Query {
+class Payload {
   public:
-    QueryMap params;
+    PayloadMap map;
     bool has(const std::string &key) const;
     std::string get(const std::string &key) const;
 };
 
 class Request {
   public:
-    Query query;
-    HeadersMap headers;
+    Payload query;
+    Payload headers;
     std::string raw_body = "";
     std::size_t length = 0;
 };
@@ -32,7 +31,7 @@ class Response {
   friend class Worker;
   private:
     std::string buffer = "";
-    HeadersMap headers;
+    Payload headers;
   public:
     int script_code = Status::OK;
     std::string output = "";
@@ -41,8 +40,8 @@ class Response {
     const std::string &get_header(const std::string &key);
     void end(const int code = Status::OK, const std::string &str = "");
     Response() {
-      headers["Content-Type"] = "text/html; charset=utf-8";
-      headers["Content-Length"] = "0";
+      headers.map["Content-Type"] = "text/html; charset=utf-8";
+      headers.map["Content-Length"] = "0";
     }
 };
 
