@@ -1,5 +1,8 @@
 #include "client.hpp"
 
+#define HTTP "HTTP/1.0"
+#define HEADERS_END "\r\n\r\n"
+
 bool Query::has(const std::string &key) const {
   return params.count(key) != 0;
 }

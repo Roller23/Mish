@@ -10,9 +10,6 @@
 
 #include "status.hpp"
 
-#define HTTP "HTTP/1.0"
-#define HEADERS_END "\r\n\r\n"
-
 typedef std::unordered_map<std::string, std::string> HeadersMap;
 typedef std::unordered_map<std::string, std::string> QueryMap;
 
@@ -27,7 +24,8 @@ class Request {
   public:
     Query query;
     HeadersMap headers;
-    std::int64_t length = -1;
+    std::string raw_body = "";
+    std::size_t length = 0;
 };
 
 class Response {

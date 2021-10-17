@@ -12,6 +12,7 @@
 #define REQUEST_BUFFER_SIZE (1024 * 10)
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
+#define HEADERS_END "\r\n\r\n"
 
 static std::string read_file(const std::string &path) {
   std::ifstream t(path);
@@ -50,6 +51,18 @@ static HeadersMap read_headers(const std::vector<std::string> &lines) {
     if (lines[i] == "\r") break;
   }
   return res;
+}
+
+static std::string read_body(const std::string &str, const std::size_t n = 0) {
+  const std::string headers_end = HEADERS_END;
+  std::size_t pos = str.find(headers_end);
+  if (pos == std::string::npos) return "";
+  const std::size_t idx = pos + headers_end.length();
+  if (idx + n > str.length()) return "";
+  if (n != 0) {
+    return str.substr(idx, n);
+  }
+  return str.substr(idx);
 }
 
 static bool resource_exists(const std::string &path) {
@@ -96,13 +109,18 @@ void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = split(data, '\n');
   client.req.headers = read_headers(request_lines);
   if (client.req.headers.count("Content-Length") != 0) {
-    client.req.length = std::stoi(client.req.headers["Content-Length"]);
+    client.req.length = std::stoul(client.req.headers["Content-Length"]);
   }
   if (client.req.length > REQUEST_BUFFER_SIZE) {
     // TODO: read the missing body parts
   }
   const std::vector<std::string> &request = split(request_lines[0], ' ');
   const std::string &request_method = request[0];
+  if (request_method == "POST") {
+    // read body
+    client.req.raw_body = read_body(data, client.req.length);
+    std::cout << "raw body: " << client.req.raw_body << std::endl;
+  }
   const std::string &full_request_path = request[1];
   const std::string &full_request = request_method + " " + full_request_path;
   const std::vector<std::string> &components = split(full_request_path, '?');
