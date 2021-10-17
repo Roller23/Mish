@@ -95,6 +95,12 @@ void Worker::handle_client(Client &client) {
   // std::cout << "buffer " << buffer << std::endl;
   const std::vector<std::string> &request_lines = split(data, '\n');
   client.req.headers = read_headers(request_lines);
+  if (client.req.headers.count("Content-Length") != 0) {
+    client.req.length = std::stoi(client.req.headers["Content-Length"]);
+  }
+  if (client.req.length > REQUEST_BUFFER_SIZE) {
+    // TODO: read the missing body parts
+  }
   const std::vector<std::string> &request = split(request_lines[0], ' ');
   const std::string &request_method = request[0];
   const std::string &full_request_path = request[1];

@@ -27,6 +27,7 @@ class Request {
   public:
     Query query;
     HeadersMap headers;
+    std::int64_t length = -1;
 };
 
 class Response {
