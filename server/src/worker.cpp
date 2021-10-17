@@ -71,6 +71,7 @@ void Worker::handle_client(Client &client) {
   std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
   int r = read(client.socket_fd, buffer, REQUEST_BUFFER_SIZE - 1);
   std::string data = buffer;
+  // std::cout << "buffer " << buffer << std::endl;
   const std::vector<std::string> &request_lines = split(data, '\n');
   const std::vector<std::string> &request = split(request_lines[0], ' ');
   const std::string &request_method = request[0];
@@ -105,7 +106,7 @@ void Worker::handle_client(Client &client) {
   if (path.extension() == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path, client);
-    return client.end(Status::OK, code_output);
+    return client.end(client.res.script_code, code_output);
   }
   client.end(Status::OK, read_file(requested_resource));
 }

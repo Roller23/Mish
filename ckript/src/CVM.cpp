@@ -806,6 +806,17 @@ class NativeHeader : public NativeFunction {
     }
 };
 
+class NativeCode : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::INT) {
+        VM.throw_runtime_error("code() expects one argument (int)", line);
+      }
+      VM.client.res.script_code = args[0].number_value;
+      return {Utils::VOID};
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -823,7 +834,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(44);
+  globals.reserve(45);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -868,4 +879,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeSleep, sleep);
   ADD_FN(NativeGet, get);
   ADD_FN(NativeHeader, header);
+  ADD_FN(NativeCode, code);
 }

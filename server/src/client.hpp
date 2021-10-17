@@ -29,11 +29,12 @@ class Request {
 };
 
 class Response {
-  friend class Server;
+  friend class Worker;
   private:
     std::string buffer = "";
     HeadersMap headers;
   public:
+    int script_code = Status::OK;
     std::string output = "";
     void append(const std::string &str);
     void add_header(const std::string &key, const std::string &value);
