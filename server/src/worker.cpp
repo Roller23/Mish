@@ -31,6 +31,27 @@ static std::vector<std::string> split(const std::string &str, char delim) {
   return out;
 }
 
+static std::string &ltrim(std::string &str, const char *whitespace = " \t") {
+    str.erase(0, str.find_first_not_of(whitespace));
+    return str;
+}
+
+static HeadersMap read_headers(const std::vector<std::string> &lines) {
+  if (lines.size() <= 1) return {}; 
+  HeadersMap res;
+  for (std::size_t i = 1; i < lines.size(); i++) {
+    if (lines[i].find(":") != std::string::npos) {
+      std::vector<std::string> header_components = split(lines[i], ':');
+      if (header_components.size() != 2) {
+        continue; // TODO
+      }
+      res[header_components[0]] = ltrim(header_components[1]);
+    }
+    if (lines[i] == "\r") break;
+  }
+  return res;
+}
+
 static bool resource_exists(const std::string &path) {
   if (!std::filesystem::exists(path)) return false;
   if (std::filesystem::is_directory(path)) return false;
@@ -73,6 +94,7 @@ void Worker::handle_client(Client &client) {
   std::string data = buffer;
   // std::cout << "buffer " << buffer << std::endl;
   const std::vector<std::string> &request_lines = split(data, '\n');
+  client.req.headers = read_headers(request_lines);
   const std::vector<std::string> &request = split(request_lines[0], ' ');
   const std::string &request_method = request[0];
   const std::string &full_request_path = request[1];
@@ -93,7 +115,7 @@ void Worker::handle_client(Client &client) {
     for (auto &pair : query_pairs) {
       const std::vector<std::string> pair_components = split(pair, '=');
       if (pair_components.size() != 2) continue; // TODO: return 400 or something
-      client.req.query.map[pair_components[0]] = pair_components[1];
+      client.req.query.params[pair_components[0]] = pair_components[1];
     }
   }
   std::cout << "full request " << full_request << std::endl;

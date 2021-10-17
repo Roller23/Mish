@@ -1,12 +1,12 @@
 #include "client.hpp"
 
 bool Query::has(const std::string &key) const {
-  return map.count(key) != 0;
+  return params.count(key) != 0;
 }
 
 std::string Query::get(const std::string &key) const {
   if (!has(key)) return "";
-  return map.at(key);
+  return params.at(key);
 }
 
 void Response::append(const std::string &str) {

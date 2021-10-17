@@ -18,7 +18,7 @@ typedef std::unordered_map<std::string, std::string> QueryMap;
 
 class Query {
   public:
-    QueryMap map;
+    QueryMap params;
     bool has(const std::string &key) const;
     std::string get(const std::string &key) const;
 };
@@ -26,6 +26,7 @@ class Query {
 class Request {
   public:
     Query query;
+    HeadersMap headers;
 };
 
 class Response {
