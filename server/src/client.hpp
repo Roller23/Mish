@@ -6,18 +6,9 @@
 #include <unistd.h>
 
 #include <string>
-#include <unordered_map>
 
+#include "map.hpp"
 #include "status.hpp"
-
-typedef std::unordered_map<std::string, std::string> StrMap;
-
-class Map {
-  public:
-    StrMap map;
-    bool has(const std::string &key) const;
-    std::string get(const std::string &key) const;
-};
 
 class Request {
   public:

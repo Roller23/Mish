@@ -8,12 +8,14 @@
 
 #include "client.hpp"
 #include "worker.hpp"
+#include "map.hpp"
 
 class Server {
   private:
     const unsigned int max_threads = std::thread::hardware_concurrency();
     const int max_connections = 1000;
 
+    Map mime_types;
     std::mutex file_mutex;
     std::mutex stdout_mutex;
     std::vector<Worker> threadpool;
