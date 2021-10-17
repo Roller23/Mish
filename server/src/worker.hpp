@@ -35,7 +35,7 @@ class Worker {
           std::cout << "Coudln't create worker pipe\n";
           exit(EXIT_FAILURE);
         }
-        struct pollfd pfd;
+        pollfd pfd;
         pfd.fd = _pipe[0];
         pfd.events = POLLIN;
         pfd.revents = 0;
