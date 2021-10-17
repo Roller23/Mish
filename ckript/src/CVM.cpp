@@ -367,11 +367,25 @@ class NativeTodouble : public NativeFunction {
 class NativeAbort : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
-      if (args.size() != 1 || args[0].type != Utils::STR) {
-        VM.throw_runtime_error("abort() expects one argument (string)", line);
+      if (args.size() == 0) throw std::runtime_error("ckript abort()");
+      if (args.size() == 1 && args[0].type == Utils::STR) {
+        VM.abort_message = args[0].string_value;
+        VM.output_buffer += args[0].string_value;
+        throw std::runtime_error("ckript abort()");
       }
-      VM.abort_message = args[0].string_value;
-      VM.output_buffer += args[0].string_value;
+      VM.throw_runtime_error("abort() accepts one optional argument (str)", line);
+      return {};
+    }
+};
+
+class NativeRedirect : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("redirect() expects one argument (str)", line);
+      }
+      VM.client.res.add_header("Location", args[0].string_value);
+      VM.client.res.script_code = Status::TemporaryRedirect;
       throw std::runtime_error("ckript abort()");
     }
 };
@@ -846,7 +860,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(46);
+  globals.reserve(47);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -893,4 +907,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeResheader, res_header);
   ADD_FN(NativeReqheader, req_header);
   ADD_FN(NativeCode, code);
+  ADD_FN(NativeRedirect, redirect);
 }
