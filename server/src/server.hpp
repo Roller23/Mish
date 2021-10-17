@@ -26,6 +26,7 @@ class Server {
       generate_threadpool();
     }
   public:
+    Worker &get_optimal_worker(void);
     static void serve_http(const int port) {
       return get().serve(port);
     }

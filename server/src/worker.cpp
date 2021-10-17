@@ -120,7 +120,6 @@ void Worker::start_thread(void) {
 
 void Worker::manage_clients(void) {
   while (true) {
-    std::cout << "poll(): waiting...\n";
     int res = poll(fds.data(), fds.size(), poll_timeout);
     if (res < 0) {
       std::cout << "poll returned " << res << std::endl;
@@ -133,9 +132,8 @@ void Worker::manage_clients(void) {
       assert(r == 1 && payload == 23);
     }
     while (client_queue.size() != 0) {
-      Client client = client_queue.front();
+      handle_client(client_queue.front());
       client_queue.pop();
-      handle_client(client);
     }
   }
 }

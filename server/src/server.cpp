@@ -40,15 +40,27 @@ void Server::generate_threadpool(void) {
   }
 }
 
+Worker &Server::get_optimal_worker(void) {
+  std::size_t idx = 0;
+  std::size_t min = threadpool[idx].client_queue.size();
+  for (std::size_t i = 0; i < threadpool.size(); i++) {
+    if (threadpool[i].client_queue.size() < min) {
+      min = threadpool[i].client_queue.size();
+      idx = i;
+    }
+  }
+  return threadpool[idx];
+}
+
 void Server::accept_connections() {
   while (true) {
     Client client;
     client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
     client.ip_addr = inet_ntoa(client.info.sin_addr);
-    threadpool[0].add_client(client);
+    Worker &worker = get_optimal_worker();
+    worker.add_client(client);
     char payload = 23;
-    int w = write(threadpool[0]._pipe[1], &payload, sizeof(payload));
-    std::cout << "sent payload to pipe " << w << std::endl;
+    int w = write(worker._pipe[1], &payload, sizeof(payload));
   }
 }
 

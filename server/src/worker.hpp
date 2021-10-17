@@ -11,6 +11,7 @@
 #include "client.hpp"
 
 class Worker {
+  friend class Server;
   private:
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
