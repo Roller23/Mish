@@ -115,12 +115,11 @@ std::string Worker::process_code(const std::string &full_path, const std::string
 }
 
 void Worker::handle_client(Client &client) {
-  char buffer[REQUEST_BUFFER_SIZE];
-  std::memset(buffer, 0, REQUEST_BUFFER_SIZE);
-  int r = read(client.socket_fd, buffer, REQUEST_BUFFER_SIZE - 1);
-  std::string data = buffer;
-  // std::cout << "buffer " << buffer << std::endl;
-  const std::vector<std::string> &request_lines = split(data, '\n');
+  char buf[REQUEST_BUFFER_SIZE];
+  std::memset(buf, 0, REQUEST_BUFFER_SIZE);
+  int r = read(client.socket_fd, buf, REQUEST_BUFFER_SIZE - 1);
+  client.buffer += buf;
+  const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
   if (client.req.headers.map.count("Content-Length") != 0) {
     client.req.length = std::stoul(client.req.headers.map["Content-Length"]);
@@ -132,7 +131,7 @@ void Worker::handle_client(Client &client) {
   const std::string &request_method = request[0];
   if (request_method == "POST") {
     // read body
-    client.req.raw_body = read_body(data, client.req.length);
+    client.req.raw_body = read_body(client.buffer, client.req.length);
     client.req.body = parse_payload(client.req.raw_body);
   }
   const std::string &full_request_path = request[1];

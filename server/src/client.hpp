@@ -47,6 +47,8 @@ class Client {
     socklen_t info_len;
   private:
     void flush(void) const;
+    std::string buffer = "";
+    bool buffer_ready(void) const;
   public:
     Request req;
     Response res;

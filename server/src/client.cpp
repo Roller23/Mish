@@ -32,6 +32,10 @@ void Client::flush(void) const {
   close(socket_fd);
 }
 
+bool Client::buffer_ready(void) const {
+  return true;
+}
+
 void Client::end(const int code, const std::string &str) {
   this->res.end(code, str);
   this->flush();
