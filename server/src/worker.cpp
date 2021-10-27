@@ -34,8 +34,8 @@ static std::vector<std::string> split(const std::string &str, char delim) {
 }
 
 static std::string &ltrim(std::string &str, const char *whitespace = " \t") {
-    str.erase(0, str.find_first_not_of(whitespace));
-    return str;
+  str.erase(0, str.find_first_not_of(whitespace));
+  return str;
 }
 
 static Map read_headers(const std::vector<std::string> &lines) {
