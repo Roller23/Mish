@@ -85,6 +85,20 @@ void Heap::free(std::int64_t ref) {
   cache.push(ref);
 }
 
+void Heap::destroy(void) {
+  // push all allocated chunks to cache
+  for (const Chunk &chunk : chunks) {
+    if (chunk.used) {
+      this->free(chunk.heap_reference);
+    }
+  }
+  while (true) {
+    std::int64_t ref = cache.pop();
+    if (ref == -1) break;
+    delete chunks[ref].data;
+  }
+}
+
 bool CVM::safe_path(const std::filesystem::path &path) const {
   const std::filesystem::path &curr = std::filesystem::current_path();
   return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();

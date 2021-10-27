@@ -1,5 +1,7 @@
 #include "mime.hpp"
 
+const std::string Mime::default_mime_type = "application/octet-stream";
+
 const std::unordered_map<std::string, std::string> Mime::mime_types = {
   {".atom", "application/atom+xml"},
   {".epub", "application/epub+zip"},
@@ -212,7 +214,7 @@ const std::unordered_map<std::string, std::string> Mime::mime_types = {
 
 const std::string &Mime::ext_to_mime(const std::string &ext) {
   if (mime_types.find(ext) == mime_types.end()) {
-    return "application/octet-stream";
+    return default_mime_type;
   }
   return mime_types.at(ext);
 }

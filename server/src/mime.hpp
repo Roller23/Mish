@@ -7,6 +7,7 @@
 class Mime {
   private:
     static const std::unordered_map<std::string, std::string> mime_types;
+    static const std::string default_mime_type;
   public:
     static const std::string &ext_to_mime(const std::string &ext);
 };
