@@ -177,14 +177,19 @@ void Worker::manage_clients(void) {
   while (true) {
     int res = poll(fds.data(), fds.size(), poll_timeout);
     if (res < 0) {
-      std::cout << "poll returned " << res << std::endl;
+      std::perror("poll()");
       std::exit(0);
     }
-    if (fds[0].fd == _pipe[0]) {
-      // pipe was used to wake up poll()
-      char payload;
-      int r = read(_pipe[0], &payload, sizeof(payload));
-      assert(r == 1 && payload == 23);
+    for (const pollfd &fd : fds) {
+      if (fd.revents & POLLIN) {
+        // there is data to read
+        if (fd.fd == _pipe[0]) {
+          // pipe was used to wake up poll()
+          char payload;
+          int r = read(_pipe[0], &payload, sizeof(payload));
+          assert(r == 1 && payload == 23);
+        }
+      }
     }
     while (client_queue.size() != 0) {
       handle_client(client_queue.front());
