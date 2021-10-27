@@ -20,6 +20,7 @@ class Worker {
     const int poll_timeout = -1;
     std::thread *thread;
     const std::string current_path = std::filesystem::current_path();
+    const std::string ckript_abort_message = "ckript abort()";
 
     void handle_client(Client &client);
     void manage_clients(void);

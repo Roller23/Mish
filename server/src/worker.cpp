@@ -101,7 +101,7 @@ std::string Worker::process_code(const std::string &full_path, const std::string
       interpreter.process_string(code);
       resource_str = resource_str.replace(first, last - first + tag_size, interpreter.VM.output_buffer);
     } catch (const std::runtime_error &e) {
-      if (std::string(e.what()) == "ckript abort()") {
+      if (e.what() == ckript_abort_message) {
         resource_str = resource_str.replace(first, resource_str.length(), interpreter.VM.output_buffer);
       } else {
         resource_str = "<body>" + interpreter.VM.error_buffer + "</body>";
