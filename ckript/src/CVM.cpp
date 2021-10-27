@@ -792,11 +792,11 @@ class NativeSleep : public NativeFunction {
     }
 };
 
-class NativeGet : public NativeFunction {
+class NativeReqget : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
       if (args.size() != 1 || args[0].type != Utils::STR) {
-        VM.throw_runtime_error("get() expects one argument (str)", line);
+        VM.throw_runtime_error("req_get() expects one argument (str)", line);
       }
       Value res(Utils::STR);
       res.string_value = VM.client.req.query.get(args[0].string_value);
@@ -804,15 +804,14 @@ class NativeGet : public NativeFunction {
     }
 };
 
-class NativePost : public NativeFunction {
-  // TODO
+class NativeReqpost : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
       if (args.size() != 1 || args[0].type != Utils::STR) {
-        VM.throw_runtime_error("post() expects one argument (str)", line);
+        VM.throw_runtime_error("req_post() expects one argument (str)", line);
       }
       Value res(Utils::STR);
-      res.string_value = VM.client.req.query.get(args[0].string_value);
+      res.string_value = VM.client.req.body.get(args[0].string_value);
       return res;
     }
 };
@@ -937,7 +936,8 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeArraytype, array_type);
   ADD_FN(NativeStacktrace, stack_trace);
   ADD_FN(NativeSleep, sleep);
-  ADD_FN(NativeGet, get);
+  ADD_FN(NativeReqget, req_get);
+  ADD_FN(NativeReqpost, req_post);
   ADD_FN(NativeResheader, res_header);
   ADD_FN(NativeReqheader, req_header);
   ADD_FN(NativeCode, code);
