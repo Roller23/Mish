@@ -1,6 +1,8 @@
 #include "CVM.hpp"
 #include "utils.hpp"
 
+#include "../../utils/uri.hpp"
+
 #include <cassert>
 #include <iostream>
 #include <fstream>
@@ -141,7 +143,7 @@ void CVM::destroy_globals(void) {
   }
 }
 
-std::string CVM::stringify(Value &val) {
+std::string CVM::stringify(Value &val) const {
   if (val.heap_reference != -1) {
     if (val.heap_reference >= this->heap.chunks.size()) {
       return "null";
@@ -863,6 +865,18 @@ class NativeCode : public NativeFunction {
     }
 };
 
+class NativeDecodeUriComponent : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("decode_uri_component() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = Uri::decode_component(args[0].string_value);
+      return res;
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -880,7 +894,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(47);
+  globals.reserve(48);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -928,4 +942,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeReqheader, req_header);
   ADD_FN(NativeCode, code);
   ADD_FN(NativeRedirect, redirect);
+  ADD_FN(NativeDecodeUriComponent, decode_uri_component);
 }

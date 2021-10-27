@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include "../../ckript/src/interpreter.hpp"
+#include "../../utils/uri.hpp"
 
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
@@ -71,7 +72,7 @@ static Map parse_payload(const std::string &str) {
   for (auto &pair : pairs) {
     const std::vector<std::string> pair_components = split(pair, '=');
     if (pair_components.size() != 2) continue; // TODO: return 400 or something
-    res.map[pair_components[0]] = pair_components[1];
+    res.map[pair_components[0]] = Uri::decode_component(pair_components[1]);
   }
   return res;
 }
