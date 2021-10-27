@@ -1,6 +1,7 @@
 #include <fstream>
 #include <queue>
 #include <iostream>
+#include <vector>
 
 #include "worker.hpp"
 #include "mime.hpp"
@@ -14,6 +15,10 @@
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
 #define HEADERS_END "\r\n\r\n"
+
+const std::vector<std::string> Worker::valid_methods = {
+  "GET", "POST", "DELETE", "PUT"
+};
 
 static std::string read_file(const std::string &path) {
   std::ifstream t(path);
@@ -138,14 +143,18 @@ void Worker::handle_client(Client &client) {
     // TODO: read the missing body parts
   }
   const std::vector<std::string> &request = split(request_lines[0], ' ');
-  const std::string &request_method = request[0];
-  if (request_method == "POST") {
+  client.req.method = request[0];
+  if (std::find(valid_methods.begin(), valid_methods.end(), client.req.method) == valid_methods.end()) {
+    // TODO: set the correct status code
+    return client.end(Status::BadRequest);
+  }
+  if (client.req.method == "POST") {
     // read body
     client.req.raw_body = read_body(client.buffer, client.req.length);
     client.req.body = parse_payload(client.req.raw_body, is_urlencoded);
   }
   const std::string &full_request_path = request[1];
-  const std::string &full_request = request_method + " " + full_request_path;
+  const std::string &full_request = client.req.method + " " + full_request_path;
   const std::vector<std::string> &components = split(full_request_path, '?');
   const std::size_t components_size = components.size();
   if (components_size > 2) {

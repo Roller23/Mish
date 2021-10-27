@@ -17,6 +17,7 @@ class Request {
     Map body;
     std::string raw_body = "";
     std::size_t length = 0;
+    std::string method;
 };
 
 class Response {

@@ -23,6 +23,7 @@ class Worker {
     static const char PIPE_PAYLOAD = 23;
     static const int PIPE_READ = 0;
     static const int PIPE_WRITE = 1;
+    static const std::vector<std::string> valid_methods;
     char temp_buffer[TEMP_BUFFER_SIZE];
     const std::string current_path = std::filesystem::current_path();
     const std::string ckript_abort_message = "ckript abort()";
