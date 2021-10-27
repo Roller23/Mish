@@ -47,7 +47,12 @@ static Map read_headers(const std::vector<std::string> &lines) {
       if (header_components.size() != 2) {
         continue; // TODO
       }
-      res.map[header_components[0]] = ltrim(header_components[1]);
+      std::string header_value = ltrim(header_components[1]);
+      const auto length = header_value.length();
+      if (length > 0 && header_value[length - 1] == '\r') {
+        header_value.pop_back();
+      }
+      res.map[header_components[0]] = header_value;
     }
     if (lines[i] == "\r") break;
   }
@@ -66,13 +71,17 @@ static std::string read_body(const std::string &str, const std::size_t n = 0) {
   return str.substr(idx);
 }
 
-static Map parse_payload(const std::string &str) {
+static Map parse_payload(const std::string &str, bool is_urlencoded = false) {
   Map res;
   const std::vector<std::string> &pairs = split(str, '&');
   for (auto &pair : pairs) {
     const std::vector<std::string> pair_components = split(pair, '=');
     if (pair_components.size() != 2) continue; // TODO: return 400 or something
-    res.map[pair_components[0]] = Uri::decode_component(pair_components[1]);
+    std::string value = pair_components[1];
+    if (is_urlencoded) {
+      std::replace(value.begin(), value.end(), '+', ' ');
+    }
+    res.map[pair_components[0]] = Uri::decode_component(value);
   }
   return res;
 }
@@ -120,8 +129,9 @@ void Worker::handle_client(Client &client) {
   client.buffer += temp_buffer;
   const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
-  if (client.req.headers.map.count("Content-Length") != 0) {
-    client.req.length = std::stoul(client.req.headers.map["Content-Length"]);
+  const bool is_urlencoded = client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded";
+  if (client.req.headers.has("Content-Length")) {
+    client.req.length = std::stoul(client.req.headers.get("Content-Length"));
   }
   if (client.req.length > TEMP_BUFFER_SIZE) {
     // TODO: read the missing body parts
@@ -146,7 +156,7 @@ void Worker::handle_client(Client &client) {
   const auto &path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
-    client.req.query = parse_payload(components[1]);
+    client.req.query = parse_payload(components[1], is_urlencoded);
   }
   std::cout << "full request " << full_request << std::endl;
   if (!safe_path(path)) {
