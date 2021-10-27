@@ -141,7 +141,7 @@ void Worker::handle_client(Client &client) {
   if (request_method == "POST") {
     // read body
     client.req.raw_body = read_body(client.buffer, client.req.length);
-    client.req.body = parse_payload(client.req.raw_body);
+    client.req.body = parse_payload(client.req.raw_body, is_urlencoded);
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = request_method + " " + full_request_path;
