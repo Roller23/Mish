@@ -11,6 +11,7 @@
 #include <cstdint>
 
 class Lexer {
+  friend class Interpreter;
   public:
     TokenList tokenize(const std::string &code);
     TokenList process_file(const std::string &filename);
@@ -40,6 +41,9 @@ class Lexer {
     std::string *file_name = new std::string;
     TokenList tokens;
     CVM &VM;
+    ~Lexer() {
+      delete file_name;
+    };
 };
 
 #endif // __LEXER

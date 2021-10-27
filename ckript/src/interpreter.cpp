@@ -19,3 +19,11 @@ void Interpreter::process_string(const std::string &code) {
   evaluator->stack.reserve(100);
   evaluator->start();
 }
+
+void Interpreter::destroy() {
+  VM.destroy_globals();
+  VM.heap.destroy();
+  if (evaluator != nullptr) {
+    delete evaluator;
+  }
+}
