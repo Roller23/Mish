@@ -10,7 +10,6 @@
 
 #include "../../ckript/src/interpreter.hpp"
 
-#define REQUEST_BUFFER_SIZE (1024 * 10)
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
 #define HEADERS_END "\r\n\r\n"
@@ -115,16 +114,15 @@ std::string Worker::process_code(const std::string &full_path, const std::string
 }
 
 void Worker::handle_client(Client &client) {
-  char buf[REQUEST_BUFFER_SIZE];
-  std::memset(buf, 0, REQUEST_BUFFER_SIZE);
-  int r = read(client.socket_fd, buf, REQUEST_BUFFER_SIZE - 1);
-  client.buffer += buf;
+  std::memset(temp_buffer, 0, TEMP_BUFFER_SIZE);
+  int r = read(client.socket_fd, temp_buffer, TEMP_BUFFER_SIZE - 1);
+  client.buffer += temp_buffer;
   const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
   if (client.req.headers.map.count("Content-Length") != 0) {
     client.req.length = std::stoul(client.req.headers.map["Content-Length"]);
   }
-  if (client.req.length > REQUEST_BUFFER_SIZE) {
+  if (client.req.length > TEMP_BUFFER_SIZE) {
     // TODO: read the missing body parts
   }
   const std::vector<std::string> &request = split(request_lines[0], ' ');

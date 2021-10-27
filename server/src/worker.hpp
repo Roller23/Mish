@@ -19,6 +19,8 @@ class Worker {
     std::vector<pollfd> fds;
     const int poll_timeout = -1;
     std::thread *thread;
+    static const int TEMP_BUFFER_SIZE = 1024 * 10;
+    char temp_buffer[TEMP_BUFFER_SIZE];
     const std::string current_path = std::filesystem::current_path();
     const std::string ckript_abort_message = "ckript abort()";
 
