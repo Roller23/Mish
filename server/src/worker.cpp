@@ -17,7 +17,7 @@
 #define HEADERS_END "\r\n\r\n"
 
 const std::vector<std::string> Worker::valid_methods = {
-  "GET", "POST", "DELETE", "PUT"
+  "GET", "POST", "DELETE", "PUT", "PATCH"
 };
 
 static std::string read_file(const std::string &path) {
