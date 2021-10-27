@@ -60,7 +60,7 @@ void Server::accept_connections() {
     Worker &worker = get_optimal_worker();
     worker.add_client(client);
     char payload = Worker::PIPE_PAYLOAD;
-    int w = write(worker._pipe[1], &payload, sizeof(payload));
+    int w = write(worker._pipe[Worker::PIPE_WRITE], &payload, sizeof(payload));
   }
 }
 

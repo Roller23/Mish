@@ -184,21 +184,28 @@ void Worker::start_thread(void) {
   thread = new std::thread(&Worker::manage_clients, this);
 }
 
+void Worker::read_pipe(void) const {
+  char payload;
+  int r = read(_pipe[PIPE_READ], &payload, sizeof(payload));
+  assert(r == sizeof(payload) && payload == PIPE_PAYLOAD);
+}
+
+bool inline Worker::can_read_fd(const pollfd &pfd) {
+  return pfd.revents & POLLIN;
+}
+
 void Worker::manage_clients(void) {
   while (true) {
-    int res = poll(fds.data(), fds.size(), poll_timeout);
+    int res = poll(pfds.data(), pfds.size(), poll_timeout);
     if (res < 0) {
       std::perror("poll()");
       std::exit(0);
     }
-    for (const pollfd &fd : fds) {
-      if (fd.revents & POLLIN) {
-        // there is data to read
-        if (fd.fd == _pipe[0]) {
+    for (const pollfd &pfd : pfds) {
+      if (can_read_fd(pfd)) {
+        if (pfd.fd == _pipe[PIPE_READ]) {
           // pipe was used to wake up poll()
-          char payload;
-          int r = read(_pipe[0], &payload, sizeof(payload));
-          assert(r == sizeof(payload) && payload == PIPE_PAYLOAD);
+          read_pipe();
         }
       }
     }
