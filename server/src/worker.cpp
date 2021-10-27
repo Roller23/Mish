@@ -130,8 +130,9 @@ void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
   const bool is_urlencoded = client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded";
-  if (client.req.headers.has("Content-Length")) {
-    client.req.length = std::stoul(client.req.headers.get("Content-Length"));
+  const std::string &content_length_str = client.req.headers.get("Content-Length");
+  if (content_length_str != "") {
+    client.req.length = std::stoul(content_length_str);
   }
   if (client.req.length > TEMP_BUFFER_SIZE) {
     // TODO: read the missing body parts
