@@ -59,7 +59,7 @@ void Server::accept_connections() {
     client.ip_addr = inet_ntoa(client.info.sin_addr);
     Worker &worker = get_optimal_worker();
     worker.add_client(client);
-    char payload = 23;
+    char payload = Worker::PIPE_PAYLOAD;
     int w = write(worker._pipe[1], &payload, sizeof(payload));
   }
 }

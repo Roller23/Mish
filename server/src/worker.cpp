@@ -187,7 +187,7 @@ void Worker::manage_clients(void) {
           // pipe was used to wake up poll()
           char payload;
           int r = read(_pipe[0], &payload, sizeof(payload));
-          assert(r == 1 && payload == 23);
+          assert(r == sizeof(char) && payload == PIPE_PAYLOAD);
         }
       }
     }
