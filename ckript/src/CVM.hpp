@@ -120,6 +120,7 @@ class CVM {
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
     Client &client;
+    void destroy_globals(void);
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);
@@ -136,6 +137,7 @@ class CVM {
 class NativeFunction {
   public:
     virtual Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) = 0;
+    virtual ~NativeFunction() = default;
 };
 
 #endif // __CVM_

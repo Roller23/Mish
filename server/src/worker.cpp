@@ -110,6 +110,7 @@ std::string Worker::process_code(const std::string &full_path, const std::string
     }
   }
   // destroy the heap to prevent memory leaks
+  interpreter.VM.destroy_globals();
   interpreter.VM.heap.destroy();
   return resource_str;
 }

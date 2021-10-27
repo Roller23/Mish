@@ -135,6 +135,12 @@ void CVM::throw_file_error(const std::string &cause) {
   throw_generic_error("File error: " + cause);
 }
 
+void CVM::destroy_globals(void) {
+  for (const auto &pair : globals) {
+    delete pair.second;
+  }
+}
+
 std::string CVM::stringify(Value &val) {
   if (val.heap_reference != -1) {
     if (val.heap_reference >= this->heap.chunks.size()) {
