@@ -21,7 +21,7 @@ class Interpreter {
   public:
     CVM VM;
     void destroy();
-    void process_string(const std::string &code);
+    void process_string(const std::string &code, std::uint64_t line_offset = 1);
     Interpreter(const std::string &_source, std::mutex &file_mut, std::mutex &stdout_mut, Client &_client) :
       source(_source),
       source_path(std::filesystem::path(_source).lexically_normal()),

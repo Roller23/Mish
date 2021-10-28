@@ -2,6 +2,7 @@
 #include <queue>
 #include <iostream>
 #include <vector>
+#include <queue>
 
 #include "worker.hpp"
 #include "mime.hpp"
@@ -102,8 +103,34 @@ static bool safe_path(const std::filesystem::path &path) {
   return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
+static std::queue<std::uint64_t> get_lines_offsets(const std::string &str) {
+  std::queue<std::uint64_t> res;
+  std::uint64_t line = 1;
+  std::uint64_t endings = 0;
+  const std::size_t length = str.length();
+  for (std::size_t i = 0; i < length; i++) {
+    if (str[i] == '\n') line++;
+    if (str[i] == '<' && str[i + 1] == '&') {
+      res.push(line);
+    }
+    if (str[i] == '&' && str[i + 1] == '>') {
+      endings++;
+    }
+  }
+  if (endings != res.size()) {
+    throw std::runtime_error("Mismatched Ckript tags");
+  }
+  return res;
+}
+
 std::string Worker::process_code(const std::string &full_path, const std::string &relative_path, Client &client) {
   std::string resource_str = read_file(full_path);
+  std::queue<std::uint64_t> lines_offsets;
+  try {
+    lines_offsets = get_lines_offsets(resource_str);
+  } catch(const std::runtime_error &e) {
+    return "<body>Parsing error: Mismatched Ckript tags number</body>";
+  }
   Interpreter interpreter(relative_path, file_mutex, stdout_mutex, client);
   const auto tag_size = sizeof(CKRIPT_START) - 1;
   while (true) {
@@ -112,7 +139,11 @@ std::string Worker::process_code(const std::string &full_path, const std::string
     auto last = resource_str.find(CKRIPT_END);
     const std::string &code = resource_str.substr(first + tag_size, last - first - tag_size);
     try {
-      interpreter.process_string(code);
+      if (lines_offsets.empty()) {
+        return "<body>Parsing error: Mismatched Ckript tags number</body>";
+      }
+      interpreter.process_string(code, lines_offsets.front());
+      lines_offsets.pop();
       resource_str = resource_str.replace(first, last - first + tag_size, interpreter.VM.output_buffer);
     } catch (const std::runtime_error &e) {
       if (e.what() == ckript_abort_message) {
