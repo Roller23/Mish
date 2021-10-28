@@ -83,8 +83,8 @@ class Call {
   public:
     std::uint64_t line;
     std::string name;
-    std::string *source;
-    Call(const std::uint64_t &__l, const std::string &__n, std::string *&__s) {
+    std::string source = "";
+    Call(const std::uint64_t &__l, const std::string &__n, const std::string &__s) {
       this->line = __l;
       this->name = __n;
       this->source = __s;
@@ -95,7 +95,7 @@ class StackTrace {
   public:
     std::vector<Call> stack;
     void pop(void);
-    void push(const std::string &_name, const std::uint64_t &_line, std::string *&_source);
+    void push(const std::string &_name, const std::uint64_t &_line, const std::string &_source);
     StackTrace(void) {
       stack.reserve(1000);
     }

@@ -41,7 +41,7 @@ void StackTrace::pop(void) {
   stack.pop_back();
 }
 
-void StackTrace::push(const std::string &_name, const std::uint64_t &_line, std::string *&_source) {
+void StackTrace::push(const std::string &_name, const std::uint64_t &_line, const std::string &_source) {
   stack.emplace_back(_line, _name, _source);
 }
 
@@ -121,6 +121,7 @@ void CVM::throw_generic_error(const std::string &cause, std::uint32_t line) {
     error_buffer += " (line " + std::to_string(line) + ")";
   }
   std::cout << std::endl;
+  error_buffer += "<br>";
   stdout_mutex.unlock();
   throw std::runtime_error("ckript error");
 }
@@ -754,23 +755,24 @@ class NativeStacktrace : public NativeFunction {
       if (args.size() != 0) {
         VM.throw_runtime_error("stack_trace() expects no arguments", line);
       }
-      int limit = 100;
+      const int limit = 100;
       int printed = 0;
       VM.stdout_mutex.lock();
       for (auto crumb = VM.trace.stack.rbegin(); crumb != VM.trace.stack.rend(); crumb++) {
         if (printed > limit) {
           std::cout << "    and " << (VM.trace.stack.size() - printed) << " more\n";
-          VM.error_buffer += "    and " + std::to_string(VM.trace.stack.size() - printed) + " more<br>";
+          VM.error_buffer += "&nbsp;&nbsp;&nbsp;&nbsp;and " + std::to_string(VM.trace.stack.size() - printed) + " more<br>";
           break;
         }
         const std::string &name = crumb->name.size() == 0 ? "<anonymous function>" : "function '" + crumb->name + "'";
         std::cout << "  in " << name << " called on line " << crumb->line;
-        VM.error_buffer += "  in " + name + " called on line " + std::to_string(crumb->line);
-        if (crumb->source != nullptr) {
-          std::cout << " in file " << *crumb->source;
-          VM.error_buffer += " in file " + *crumb->source;
+        VM.error_buffer += "&nbsp;&nbsp;in " + name + " called on line " + std::to_string(crumb->line);
+        if (crumb->source != "") {
+          std::cout << " in file " << crumb->source;
+          VM.error_buffer += "&nbsp;&nbsp;in file " + crumb->source;
         }
         std::cout << std::endl;
+        VM.error_buffer += "<br>";
         printed++;
       }
       VM.stdout_mutex.unlock();

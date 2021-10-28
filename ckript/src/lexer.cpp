@@ -82,7 +82,7 @@ void Lexer::add_token(Token::TokenType type, const std::string &val) {
 void Lexer::add_unknown_token(std::string str) {
   log("token [UNKNOWN: " + str + "], ");
   add_token(Token::UNKNOWN, str);
-  VM.throw_syntax_error("(" + *file_name + ") unknown token '" + str + "'", current_line);
+  VM.throw_syntax_error("(" + file_name + ") unknown token '" + str + "'", current_line);
 }
 
 void Lexer::add_char_token(const char c) {
@@ -100,7 +100,7 @@ TokenList Lexer::tokenize(const std::string &code) {
   this->end = code.end();
   std::string chars = ".,:;{}[]()~$#";
   std::string chars2 = "=+-*&|/<>!%^";
-  tokens.reserve(code.size() / 2); // estimate needed space - not memory efficient but speeds things up
+  tokens.reserve(code.size() / 2);
   while (ptr != end) {
     deleted_spaces = 0;
     consume_whitespace();
@@ -122,10 +122,10 @@ TokenList Lexer::tokenize(const std::string &code) {
           consume_whitespace();
           c = *ptr;
           if (!(c == '"' || c == '\'' || c == '`') || ptr == end || ptr + 1 == end) {
-            VM.throw_syntax_error("(" + *file_name + ") expected a string literal after include", current_line);
+            VM.throw_syntax_error("(" + file_name + ") expected a string literal after include", current_line);
           }
           ptr++;
-          std::string path = file_dir + "/";
+          std::string path = "";
           while (*ptr != c && ptr != end) {
             path += *(ptr++);
           }
@@ -180,14 +180,14 @@ TokenList Lexer::tokenize(const std::string &code) {
           log("token [CONST], ");
           add_token(Token::CONST);
         } else {
-          const char *found_type = NULL;
+          const char *found_type = nullptr;
           for (int i = 0; i < Lexer::types_count; i++) {
             if (token_str == Lexer::builtin_types[i]) {
               found_type = Lexer::builtin_types[i];
               break;
             }
           }
-          if (found_type == NULL) {
+          if (found_type == nullptr) {
             // probably an identifier
             log("token [IDENTIFIER: " + token_str + "], ");
             add_token(Token::IDENTIFIER, token_str);
@@ -336,15 +336,20 @@ TokenList Lexer::tokenize(const std::string &code) {
 }
 
 TokenList Lexer::process_file(const std::string &filename) {
-  *file_name = filename;
-  std::ifstream file(filename);
+  file_name = filename;
+  const std::string &actual_path = VM.actual_path(filename);
+  if (!VM.safe_path(actual_path)) {
+    VM.throw_file_error("Couldn't open " + filename);
+  }
+  std::ifstream file(actual_path);
   if (!file.good()) {
     VM.throw_file_error("Couldn't open " + filename);
   }
+  // TODO: use std::filesystem::path to get parent dir
   std::int64_t pos = filename.find_last_of("/\\");
   if (pos != -1) {
     file_dir = filename.substr(0, pos);
-    *file_name = filename.substr(pos + 1);
+    file_name = filename.substr(pos + 1);
   }
   std::string buffer(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{});
   return tokenize(buffer);
@@ -352,6 +357,6 @@ TokenList Lexer::process_file(const std::string &filename) {
 
 void Lexer::set_filename(const std::string &filename) {
   const auto &path = std::filesystem::path(filename).lexically_normal();
-  *file_name = path.string();
+  file_name = path.string();
   file_dir = path.parent_path().string();
 }

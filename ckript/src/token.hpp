@@ -44,9 +44,9 @@ class Token {
     TokenType type = NONE;
     std::string value = "";
     std::uint64_t line = 0;
-    std::string *source = nullptr;
+    std::string source = "";
     Token(void) : type(NONE) {};
-    Token(TokenType _type, const std::string &val, int _line, std::string *&_source) :
+    Token(TokenType _type, const std::string &val, int _line, const std::string &_source) :
       type(_type), value(val), line(_line), source(_source) {}
     std::string get_name(void) const;
     static std::string get_name(TokenType type);

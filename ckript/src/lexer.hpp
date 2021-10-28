@@ -38,12 +38,9 @@ class Lexer {
     int deleted_spaces = 0;
     int prev_deleted_spaces = 0;
     std::string file_dir = "";
-    std::string *file_name = new std::string;
+    std::string file_name = "";
     TokenList tokens;
     CVM &VM;
-    ~Lexer() {
-      delete file_name;
-    };
 };
 
 #endif // __LEXER

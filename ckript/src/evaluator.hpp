@@ -57,7 +57,7 @@ class Evaluator {
     bool returns_ref = false;
     int nested_loops = 0;
     std::uint64_t current_line = 0;
-    std::string *current_source = nullptr;
+    std::string current_source = "";
     void throw_error(const std::string &cause);
     int execute_statement(const Node &statement);
     Value evaluate_expression(const NodeList &expression_tree, const bool get_ref = false);

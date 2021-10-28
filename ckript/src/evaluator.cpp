@@ -37,9 +37,9 @@ typedef std::vector<SharedRpnElement> SharedRpnStack;
 
 void Evaluator::throw_error(const std::string &cause) {
   VM.stdout_mutex.lock();
-  if (current_source != nullptr) {
-    std::cout << "(" << *current_source << ") ";
-    VM.error_buffer += "(" + *current_source + ") ";
+  if (current_source != "") {
+    std::cout << "(" << current_source << ") ";
+    VM.error_buffer += "(" + current_source + ") ";
   }
   std::cout << "Runtime error: " << cause << " (line " << current_line << ")\n";
   VM.error_buffer += "Runtime error: " + cause + " (line " + std::to_string(current_line) + ")<br>";

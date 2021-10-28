@@ -101,7 +101,7 @@ class Statement {
     ClassStatement class_stmt;
     std::vector<std::string> obj_members;
     std::uint64_t line = 0;
-    std::string *source = nullptr;
+    std::string source = "";
     Statement(void) : type(NONE) {}
     Statement(StmtType _type) : type(_type) {}
     Statement(const ClassStatement &_class) : type(CLASS), class_stmt(_class) {};
