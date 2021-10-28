@@ -4,9 +4,10 @@
 #include <unistd.h>
 #include <poll.h>
 
-#include <queue>
 #include <thread>
 #include <iostream>
+#include <queue>
+#include <vector>
 
 #include "client.hpp"
 
@@ -30,6 +31,7 @@ class Worker {
     
     void read_pipe(void) const;
     void handle_client(Client &client);
+    void read_client(Client &client);
     void manage_clients(void);
     static inline bool can_read_fd(const pollfd &pfd);
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);

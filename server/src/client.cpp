@@ -33,6 +33,7 @@ void Client::flush(void) const {
 }
 
 bool Client::buffer_ready(void) const {
+  // TODO: implement this
   return true;
 }
 

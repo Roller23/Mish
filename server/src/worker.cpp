@@ -159,10 +159,13 @@ std::string Worker::process_code(const std::string &full_path, const std::string
   return resource_str;
 }
 
-void Worker::handle_client(Client &client) {
+void Worker::read_client(Client &client) {
   std::memset(temp_buffer, 0, TEMP_BUFFER_SIZE);
   int r = read(client.socket_fd, temp_buffer, TEMP_BUFFER_SIZE - 1);
   client.buffer += temp_buffer;
+}
+
+void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
   const bool is_urlencoded = client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded";
@@ -219,6 +222,11 @@ void Worker::handle_client(Client &client) {
 
 void Worker::add_client(Client &client) {
   client_queue.push(client);
+  // pollfd client_pfd;
+  // client_pfd.fd = client.socket_fd;
+  // client_pfd.events = POLLIN | POLLHUP;
+  // client_pfd.revents = 0;
+  // pfds.push_back(client_pfd);
 }
 
 void Worker::start_thread(void) {
@@ -251,8 +259,12 @@ void Worker::manage_clients(void) {
       }
     }
     while (client_queue.size() != 0) {
-      handle_client(client_queue.front());
-      client_queue.pop();
+      Client &client = client_queue.front();
+      read_client(client);
+      if (client.buffer_ready()) {
+        handle_client(client);
+        client_queue.pop();
+      }
     }
   }
 }

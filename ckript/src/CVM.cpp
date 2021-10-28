@@ -107,8 +107,8 @@ bool CVM::safe_path(const std::filesystem::path &path) const {
 }
 
 std::string CVM::actual_path(const std::string &filename) const {
-  const std::string &current_path = std::filesystem::current_path().string();
-  const std::string &source_path_parent = source_path.parent_path().string();
+  const std::string &current_path = std::filesystem::current_path();
+  const std::string &source_path_parent = source_path.parent_path();
   return current_path + source_path_parent + "/" + filename;
 }
 
