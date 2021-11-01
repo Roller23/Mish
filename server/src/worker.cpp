@@ -77,16 +77,14 @@ static std::string read_body(const std::string &str, const std::size_t n = 0) {
   return str.substr(idx);
 }
 
-static Map parse_payload(const std::string &str, bool is_urlencoded = false) {
+static Map parse_payload(const std::string &str) {
   Map res;
   const std::vector<std::string> &pairs = split(str, '&');
   for (auto &pair : pairs) {
     const std::vector<std::string> pair_components = split(pair, '=');
     if (pair_components.size() != 2) continue; // TODO: return 400 or something
     std::string value = pair_components[1];
-    if (is_urlencoded) {
-      std::replace(value.begin(), value.end(), '+', ' ');
-    }
+    std::replace(value.begin(), value.end(), '+', ' ');
     res.map[pair_components[0]] = Uri::decode_component(value);
   }
   return res;
@@ -168,7 +166,6 @@ void Worker::read_client(Client &client) {
 void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = split(client.buffer, '\n');
   client.req.headers = read_headers(request_lines);
-  const bool is_urlencoded = client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded";
   const std::string &content_length_str = client.req.headers.get("Content-Length");
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
@@ -185,7 +182,7 @@ void Worker::handle_client(Client &client) {
   if (client.req.method == "POST") {
     // read body
     client.req.raw_body = read_body(client.buffer, client.req.length);
-    client.req.body = parse_payload(client.req.raw_body, is_urlencoded);
+    client.req.body = parse_payload(client.req.raw_body);
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = client.req.method + " " + full_request_path;
@@ -200,7 +197,7 @@ void Worker::handle_client(Client &client) {
   const auto &path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
-    client.req.query = parse_payload(components[1], is_urlencoded);
+    client.req.query = parse_payload(components[1]);
   }
   std::cout << "full request " << full_request << std::endl;
   if (!safe_path(path)) {
