@@ -15,6 +15,9 @@ compile:
 	@mkdir -p $(ckript_build)
 	$(CC) $(flags) -lm -o $(ckript_out) $(ckript_src)*.cpp ckript/main.cpp
 
+install:
+	sudo cp ./mish /usr/local/bin/mish
+
 run:
 	./$(ckript_out) $(input)
 
