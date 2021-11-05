@@ -202,7 +202,7 @@ class Status {
         case NetworkAuthenticationRequired:
           return "Network Authentication Required";
       }
-      return "Unknown";
+      return "Custom";
     }
 };
 
