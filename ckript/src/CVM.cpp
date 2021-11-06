@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include "../../utils/uri.hpp"
+#include "../../utils/path.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -99,11 +100,6 @@ void Heap::destroy(void) {
     if (ref == -1) break;
     delete chunks[ref].data;
   }
-}
-
-bool CVM::safe_path(const std::filesystem::path &path) const {
-  const std::filesystem::path &curr = std::filesystem::current_path();
-  return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
 std::string CVM::actual_path(const std::string &filename) const {
@@ -239,7 +235,7 @@ class NativeRender : public NativeFunction {
         VM.throw_runtime_error("render() expects one argument (str)", line);
       }
       const std::string &actual_path = VM.actual_path(args[0].string_value);
-      if (!VM.safe_path(actual_path)) {
+      if (!Path::safe(actual_path)) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       VM.file_mutex.lock();
@@ -454,7 +450,7 @@ class NativeFileread : public NativeFunction {
         VM.throw_runtime_error("file_read() expects one argument (str)", line);
       }
       const std::string &actual_path = VM.actual_path(args[0].string_value);
-      if (!VM.safe_path(actual_path)) {
+      if (!Path::safe(actual_path)) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       Value val(Utils::STR);
@@ -480,7 +476,7 @@ class NativeFilewrite : public NativeFunction {
         VM.throw_runtime_error("file_write() expects two arguments (str, str)", line);
       }
       const std::string &actual_path = VM.actual_path(args[0].string_value);
-      if (!VM.safe_path(actual_path)) {
+      if (!Path::safe(actual_path)) {
         VM.throw_runtime_error("couldn't read " + args[0].string_value, line);
       }
       Value val(Utils::BOOL);
@@ -508,7 +504,7 @@ class NativeFileexists : public NativeFunction {
       }
       const std::string &actual_path = VM.actual_path(args[0].string_value);
       Value val(Utils::BOOL);
-      if (!VM.safe_path(actual_path)) {
+      if (!Path::safe(actual_path)) {
         val.boolean_value = false;
         return val;
       }
@@ -529,7 +525,7 @@ class NativeFileremove : public NativeFunction {
       }
       Value val(Utils::BOOL);
       const std::string &actual_path = VM.actual_path(args[0].string_value);
-      if (!VM.safe_path(actual_path)) {
+      if (!Path::safe(actual_path)) {
         val.boolean_value = false;
         return val;
       }

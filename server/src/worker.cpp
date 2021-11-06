@@ -4,18 +4,19 @@
 #include <vector>
 #include <queue>
 
-#include "worker.hpp"
-#include "mime.hpp"
-
 #include <poll.h>
 #include <cassert>
 
+#include "worker.hpp"
+#include "mime.hpp"
+
 #include "../../ckript/src/interpreter.hpp"
-#include "../../utils/uri.hpp"
+#include "../../utils/path.hpp"
+#include "../../utils/utils.hpp"
+#include "../../utils/http.hpp"
 
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
-#define HEADERS_END "\r\n\r\n"
 
 const std::vector<std::string> Worker::valid_methods = {
   "GET", "POST", "DELETE", "PUT", "PATCH"
@@ -26,79 +27,6 @@ static std::string read_file(const std::string &path) {
   std::stringstream buffer;
   buffer << t.rdbuf();
   return buffer.str();
-}
-
-static std::vector<std::string> split(const std::string &str, char delim) {
-  std::size_t start;
-  std::size_t end = 0;
-  std::vector<std::string> out;
-  while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
-    end = str.find(delim, start);
-    out.push_back(str.substr(start, end - start));
-  }
-  return out;
-}
-
-static std::string &ltrim(std::string &str, const char *whitespace = " \t") {
-  str.erase(0, str.find_first_not_of(whitespace));
-  return str;
-}
-
-static Map read_headers(const std::vector<std::string> &lines) {
-  if (lines.size() <= 1) return {}; 
-  Map res;
-  for (std::size_t i = 1; i < lines.size(); i++) {
-    if (lines[i].find(":") != std::string::npos) {
-      std::vector<std::string> header_components = split(lines[i], ':');
-      if (header_components.size() != 2) {
-        continue; // TODO
-      }
-      std::string header_value = ltrim(header_components[1]);
-      const auto length = header_value.length();
-      if (length > 0 && header_value[length - 1] == '\r') {
-        header_value.pop_back();
-      }
-      res.map[header_components[0]] = header_value;
-    }
-    if (lines[i] == "\r") break;
-  }
-  return res;
-}
-
-static std::string read_body(const std::string &str, const std::size_t n = 0) {
-  const std::string headers_end = HEADERS_END;
-  std::size_t pos = str.find(headers_end);
-  if (pos == std::string::npos) return "";
-  const std::size_t idx = pos + headers_end.length();
-  if (idx + n > str.length()) return "";
-  if (n != 0) {
-    return str.substr(idx, n);
-  }
-  return str.substr(idx);
-}
-
-static Map parse_payload(const std::string &str) {
-  Map res;
-  const std::vector<std::string> &pairs = split(str, '&');
-  for (auto &pair : pairs) {
-    const std::vector<std::string> pair_components = split(pair, '=');
-    if (pair_components.size() != 2) continue; // TODO: return 400 or something
-    std::string value = pair_components[1];
-    std::replace(value.begin(), value.end(), '+', ' ');
-    res.map[pair_components[0]] = Uri::decode_component(value);
-  }
-  return res;
-}
-
-static bool resource_exists(const std::string &path) {
-  if (!std::filesystem::exists(path)) return false;
-  if (std::filesystem::is_directory(path)) return false;
-  return true;
-}
-
-static bool safe_path(const std::filesystem::path &path) {
-  const std::filesystem::path &curr = std::filesystem::current_path();
-  return std::search(path.begin(), path.end(), curr.begin(), curr.end()) != path.end();
 }
 
 static std::queue<std::uint64_t> get_lines_offsets(const std::string &str) {
@@ -164,8 +92,8 @@ void Worker::read_client(Client &client) {
 }
 
 void Worker::handle_client(Client &client) {
-  const std::vector<std::string> &request_lines = split(client.req.buffer, '\n');
-  client.req.headers = read_headers(request_lines);
+  const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
+  client.req.headers = Http::read_headers(request_lines);
   const std::string &content_length_str = client.req.headers.get("Content-Length");
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
@@ -173,7 +101,7 @@ void Worker::handle_client(Client &client) {
   if (client.req.length > TEMP_BUFFER_SIZE) {
     // TODO: read the missing body parts
   }
-  const std::vector<std::string> &request = split(request_lines[0], ' ');
+  const std::vector<std::string> &request = Srv::Utils::split(request_lines[0], ' ');
   client.req.method = request[0];
   if (std::find(valid_methods.begin(), valid_methods.end(), client.req.method) == valid_methods.end()) {
     // TODO: set the correct status code
@@ -181,12 +109,12 @@ void Worker::handle_client(Client &client) {
   }
   if (client.req.method == "POST") {
     // read body
-    client.req.raw_body = read_body(client.req.buffer, client.req.length);
-    client.req.body = parse_payload(client.req.raw_body);
+    client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
+    client.req.body = Http::parse_payload(client.req.raw_body);
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = client.req.method + " " + full_request_path;
-  const std::vector<std::string> &components = split(full_request_path, '?');
+  const std::vector<std::string> &components = Srv::Utils::split(full_request_path, '?');
   const std::size_t components_size = components.size();
   if (components_size > 2) {
     // malformed request
@@ -197,13 +125,13 @@ void Worker::handle_client(Client &client) {
   const auto &path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
-    client.req.query = parse_payload(components[1]);
+    client.req.query = Http::parse_payload(components[1]);
   }
   std::cout << "full request " << full_request << std::endl;
-  if (!safe_path(path)) {
+  if (!Path::safe(path)) {
     return client.end(Status::NotFound);
   }
-  if (!resource_exists(requested_resource)) {
+  if (!Path::resource_exists(requested_resource)) {
     return client.end(Status::NotFound);
   }
   const std::string ext = path.extension();

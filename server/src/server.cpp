@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <cstring>
+#include <cassert>
 #include <unistd.h>
 
 #include <iostream>
@@ -61,6 +62,7 @@ void Server::accept_connections() {
     worker.add_client(client);
     char payload = Worker::PIPE_PAYLOAD;
     int w = write(worker._pipe[Worker::PIPE_WRITE], &payload, sizeof(payload));
+    assert(w == sizeof(payload));
   }
 }
 

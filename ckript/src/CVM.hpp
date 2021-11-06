@@ -107,7 +107,6 @@ class CVM {
   private:
     void load_stdlib(void);
   public:
-    bool safe_path(const std::filesystem::path &path) const;
     std::string actual_path(const std::string &filename) const;
     std::string stringify(Value &val) const;
     std::unordered_map<std::string, NativeFunction *> globals;

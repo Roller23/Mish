@@ -1,5 +1,7 @@
 #include "lexer.hpp"
 
+#include "../../utils/path.hpp"
+
 #include <iterator>
 #include <fstream>
 #include <iostream>
@@ -338,7 +340,7 @@ TokenList Lexer::tokenize(const std::string &code) {
 TokenList Lexer::process_file(const std::string &filename) {
   file_name = filename;
   const std::string &actual_path = VM.actual_path(filename);
-  if (!VM.safe_path(actual_path)) {
+  if (!Path::safe(actual_path)) {
     VM.throw_file_error("Couldn't open " + filename);
   }
   std::ifstream file(actual_path);

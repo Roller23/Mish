@@ -1,4 +1,8 @@
 #include "client.hpp"
+#include "map.hpp"
+
+#include "../../utils/http.hpp"
+#include "../../utils/utils.hpp"
 
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
@@ -9,7 +13,12 @@ bool Request::has_headers() const {
 
 bool Request::has_body() const {
   if (!has_headers()) return false;
-  return true;
+  const std::vector<std::string> &buffer_lines = Srv::Utils::split(buffer, '\n');
+  const Map &req_headers = Http::read_headers(buffer_lines);
+  if (!req_headers.has("Content-Length")) return true;
+  const std::string headers_end = HEADERS_END;
+  const std::size_t headers_length = buffer.find(headers_end) + headers_end.length();
+  return buffer.length() - headers_length == std::stoi(req_headers.get("Content-Length"));
 }
 
 void Response::append(const std::string &str) {
