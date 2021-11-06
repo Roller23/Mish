@@ -27,8 +27,12 @@ void Response::end(const int code, const std::string &str) {
   output += this->buffer;
 }
 
-void Client::flush(void) const {
+void Client::flush(void) {
   write(socket_fd, res.output.c_str(), res.output.length());
+  res.output = "";
+}
+
+void Client::_close(void) const {
   close(socket_fd);
 }
 
@@ -38,6 +42,7 @@ bool Client::buffer_ready(void) const {
 }
 
 void Client::end(const int code, const std::string &str) {
-  this->res.end(code, str);
-  this->flush();
+  res.end(code, str);
+  flush();
+  _close();
 }

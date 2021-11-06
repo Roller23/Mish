@@ -47,7 +47,8 @@ class Client {
     sockaddr_in info;
     socklen_t info_len;
   private:
-    void flush(void) const;
+    void flush(void);
+    void _close(void) const;
     std::string buffer = "";
     bool buffer_ready(void) const;
   public:
