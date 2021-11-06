@@ -15,9 +15,13 @@ class Request {
     Map query;
     Map headers;
     Map body;
+    std::string buffer = "";
     std::string raw_body = "";
     std::size_t length = 0;
     std::string method;
+
+    bool has_headers() const;
+    bool has_body() const;
 };
 
 class Response {
@@ -49,7 +53,6 @@ class Client {
   private:
     void flush(void);
     void _close(void) const;
-    std::string buffer = "";
     bool buffer_ready(void) const;
   public:
     Request req;

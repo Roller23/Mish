@@ -3,6 +3,15 @@
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
 
+bool Request::has_headers() const {
+  return buffer.find(HEADERS_END) != std::string::npos;
+}
+
+bool Request::has_body() const {
+  if (!has_headers()) return false;
+  return true;
+}
+
 void Response::append(const std::string &str) {
   buffer += str;
   headers.map["Content-Length"] = std::to_string(buffer.size());
@@ -37,8 +46,7 @@ void Client::_close(void) const {
 }
 
 bool Client::buffer_ready(void) const {
-  // TODO: implement this
-  return true;
+  return req.has_body();
 }
 
 void Client::end(const int code, const std::string &str) {

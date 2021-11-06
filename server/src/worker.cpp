@@ -160,11 +160,11 @@ std::string Worker::process_code(const std::string &full_path, const std::string
 void Worker::read_client(Client &client) {
   std::memset(temp_buffer, 0, TEMP_BUFFER_SIZE);
   int r = read(client.socket_fd, temp_buffer, TEMP_BUFFER_SIZE - 1);
-  client.buffer += temp_buffer;
+  client.req.buffer += temp_buffer;
 }
 
 void Worker::handle_client(Client &client) {
-  const std::vector<std::string> &request_lines = split(client.buffer, '\n');
+  const std::vector<std::string> &request_lines = split(client.req.buffer, '\n');
   client.req.headers = read_headers(request_lines);
   const std::string &content_length_str = client.req.headers.get("Content-Length");
   if (content_length_str != "") {
@@ -181,7 +181,7 @@ void Worker::handle_client(Client &client) {
   }
   if (client.req.method == "POST") {
     // read body
-    client.req.raw_body = read_body(client.buffer, client.req.length);
+    client.req.raw_body = read_body(client.req.buffer, client.req.length);
     client.req.body = parse_payload(client.req.raw_body);
   }
   const std::string &full_request_path = request[1];
