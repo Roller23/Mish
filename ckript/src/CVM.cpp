@@ -880,7 +880,7 @@ class NativeCors : public NativeFunction {
       if (args.size() != 0) {
         VM.throw_runtime_error("cors() expects no arguments", line);
       }
-      VM.client.res.should_enable_cors = true;
+      VM.client.should_enable_cors = true;
       return {Utils::VOID};
     }
 };

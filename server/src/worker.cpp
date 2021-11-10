@@ -147,7 +147,7 @@ void Worker::handle_client(Client &client) {
   if (ext == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path, client);
-    if (client.res.should_enable_cors) {
+    if (client.should_enable_cors) {
       client.enable_cors();
     }
     return client.end(client.res.script_code, code_output);
