@@ -113,7 +113,9 @@ void Worker::handle_client(Client &client) {
   if (client.req.method == "POST") {
     // read body
     client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
-    client.req.body = Http::parse_payload(client.req.raw_body);
+    if (client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded") {
+      client.req.body = Http::parse_payload(client.req.raw_body);
+    }
   }
   const std::string &full_request_path = request[1];
   const std::string &full_request = client.req.method + " " + full_request_path;
