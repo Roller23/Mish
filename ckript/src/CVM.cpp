@@ -802,11 +802,11 @@ class NativeQuery : public NativeFunction {
     }
 };
 
-class NativeReqpost : public NativeFunction {
+class NativeBody : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
       if (args.size() != 1 || args[0].type != Utils::STR) {
-        VM.throw_runtime_error("req_post() expects one argument (str)", line);
+        VM.throw_runtime_error("body() expects one argument (str)", line);
       }
       Value res(Utils::STR);
       res.string_value = VM.client.req.body.get(args[0].string_value);
@@ -935,7 +935,7 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeStacktrace, stack_trace);
   ADD_FN(NativeSleep, sleep);
   ADD_FN(NativeQuery, query);
-  ADD_FN(NativeReqpost, req_post);
+  ADD_FN(NativeBody, body);
   ADD_FN(NativeResheader, res_header);
   ADD_FN(NativeReqheader, req_header);
   ADD_FN(NativeCode, code);
