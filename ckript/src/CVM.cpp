@@ -291,7 +291,7 @@ class NativeFlush : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
       if (args.size() != 0) {
-        VM.throw_runtime_error("flush() takes no arguments", line);
+        VM.throw_runtime_error("flush() expects no arguments", line);
       }
       std::fflush(stdout);
       return {Utils::VOID};
@@ -874,6 +874,24 @@ class NativeDecodeUriComponent : public NativeFunction {
     }
 };
 
+class NativeCors : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 0) {
+        VM.throw_runtime_error("cors() expects no arguments", line);
+      }
+      const std::string &requested_headers = VM.client.req.headers.get("Access-Control-Request-Headers");
+      VM.client.res.add_header("Access-Control-Allow-Origin", "*");
+      VM.client.res.add_header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+      VM.client.res.add_header("Access-Control-Allow-Headers", requested_headers);
+      if (VM.client.req.method == "OPTIONS") {
+        VM.client.res.add_header("Content-Length", "0");
+        VM.client.res.script_code = Status::NoContent;
+      }
+      return {Utils::VOID};
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -891,7 +909,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(48);
+  globals.reserve(49);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -941,4 +959,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeCode, code);
   ADD_FN(NativeRedirect, redirect);
   ADD_FN(NativeDecodeUriComponent, decode_uri_component);
+  ADD_FN(NativeCors, cors);
 }
