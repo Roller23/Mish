@@ -147,6 +147,9 @@ void Worker::handle_client(Client &client) {
   if (ext == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path, client);
+    if (client.res.should_enable_cors) {
+      client.enable_cors();
+    }
     return client.end(client.res.script_code, code_output);
   }
   const std::string &mime_type = Mime::ext_to_mime(ext);

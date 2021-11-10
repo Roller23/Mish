@@ -1,5 +1,6 @@
 #include "client.hpp"
 #include "map.hpp"
+#include "status.hpp"
 
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
@@ -56,6 +57,17 @@ void Client::_close(void) const {
 
 bool Client::buffer_ready(void) const {
   return req.has_body();
+}
+
+void Client::enable_cors(void) {
+  const std::string &requested_headers = req.headers.get("Access-Control-Request-Headers");
+  res.add_header("Access-Control-Allow-Origin", "*");
+  res.add_header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+  res.add_header("Access-Control-Allow-Headers", requested_headers);
+  if (req.method == "OPTIONS") {
+    res.add_header("Content-Length", "0");
+    res.script_code = Status::NoContent;
+  }
 }
 
 void Client::end(const int code, const std::string &str) {

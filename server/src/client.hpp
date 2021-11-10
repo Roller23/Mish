@@ -32,6 +32,7 @@ class Response {
   public:
     int script_code = Status::OK;
     std::string output = "";
+    bool should_enable_cors = false;
     void append(const std::string &str);
     void add_header(const std::string &key, const std::string &value);
     const std::string &get_header(const std::string &key);
@@ -55,6 +56,7 @@ class Client {
     void flush(void);
     void _close(void) const;
     bool buffer_ready(void) const;
+    void enable_cors(void);
   public:
     Request req;
     Response res;

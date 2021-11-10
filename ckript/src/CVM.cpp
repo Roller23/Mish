@@ -880,14 +880,7 @@ class NativeCors : public NativeFunction {
       if (args.size() != 0) {
         VM.throw_runtime_error("cors() expects no arguments", line);
       }
-      const std::string &requested_headers = VM.client.req.headers.get("Access-Control-Request-Headers");
-      VM.client.res.add_header("Access-Control-Allow-Origin", "*");
-      VM.client.res.add_header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-      VM.client.res.add_header("Access-Control-Allow-Headers", requested_headers);
-      if (VM.client.req.method == "OPTIONS") {
-        VM.client.res.add_header("Content-Length", "0");
-        VM.client.res.script_code = Status::NoContent;
-      }
+      VM.client.res.should_enable_cors = true;
       return {Utils::VOID};
     }
 };
