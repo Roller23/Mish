@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 std::vector<std::string> Srv::Utils::split(const std::string &str, char delim) {
   std::size_t start;
@@ -16,4 +17,8 @@ std::vector<std::string> Srv::Utils::split(const std::string &str, char delim) {
 
 std::string Srv::Utils::ltrim(std::string str, const char *whitespace) {
   return str.erase(0, str.find_first_not_of(whitespace));
+}
+
+bool Srv::Utils::vector_contains(const std::vector<std::string> &v, const std::string &n) {
+  return std::find(v.begin(), v.end(), n) == v.end();
 }

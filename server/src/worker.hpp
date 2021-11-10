@@ -25,6 +25,7 @@ class Worker {
     static const int PIPE_READ = 0;
     static const int PIPE_WRITE = 1;
     static const std::vector<std::string> valid_methods;
+    static const std::vector<std::string> methods_containing_bodies;
     char temp_buffer[TEMP_BUFFER_SIZE];
     const std::string current_path = std::filesystem::current_path();
     const std::string ckript_abort_message = "ckript abort()";

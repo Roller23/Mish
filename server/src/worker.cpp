@@ -22,6 +22,10 @@ const std::vector<std::string> Worker::valid_methods = {
   "GET", "POST", "DELETE", "PUT", "PATCH"
 };
 
+const std::vector<std::string> Worker::methods_containing_bodies = {
+  "POST", "PUT", "PATCH"
+};
+
 static std::string read_file(const std::string &path) {
   std::ifstream t(path);
   std::stringstream buffer;
@@ -106,11 +110,11 @@ void Worker::handle_client(Client &client) {
   }
   const std::vector<std::string> &request = Srv::Utils::split(request_lines[0], ' ');
   client.req.method = request[0];
-  if (std::find(valid_methods.begin(), valid_methods.end(), client.req.method) == valid_methods.end()) {
+  if (Srv::Utils::vector_contains(valid_methods, client.req.method)) {
     // TODO: set the correct status code
     return client.end(Status::BadRequest);
   }
-  if (client.req.method == "POST") {
+  if (Srv::Utils::vector_contains(methods_containing_bodies, client.req.method)) {
     // read body
     client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
     if (client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded") {
