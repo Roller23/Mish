@@ -20,7 +20,7 @@ class Worker {
     std::vector<pollfd> pfds;
     const int poll_timeout = -1;
     std::thread *thread;
-    static const int TEMP_BUFFER_SIZE = 1024 * 10;
+    static const int TEMP_BUFFER_SIZE = 1024 * 8; // 8KB
     static const char PIPE_PAYLOAD = 23;
     static const int PIPE_READ = 0;
     static const int PIPE_WRITE = 1;
@@ -28,6 +28,8 @@ class Worker {
     char temp_buffer[TEMP_BUFFER_SIZE];
     const std::string current_path = std::filesystem::current_path();
     const std::string ckript_abort_message = "ckript abort()";
+    int max_body_size = 1024 * 1024 * 8; // 8MB
+    int max_headers_size = 1024 * 16; // 16KB
     
     void read_pipe(void) const;
     void handle_client(Client &client);

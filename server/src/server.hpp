@@ -12,8 +12,9 @@
 
 class Server {
   private:
-    const unsigned int max_threads = std::thread::hardware_concurrency();
-    const int max_connections = 1000;
+    unsigned int max_threads = std::thread::hardware_concurrency();
+    int max_connections = 1000;
+    int max_body_size = 1024 * 1024 * 8; // 8MB
 
     Map mime_types;
     std::mutex file_mutex;

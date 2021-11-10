@@ -98,6 +98,9 @@ void Worker::handle_client(Client &client) {
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
   }
+  if (client.req.length > max_body_size) {
+    return client.end(Status::RequestEntityTooLarge);
+  }
   if (client.req.length > TEMP_BUFFER_SIZE) {
     // TODO: read the missing body parts
   }
@@ -186,10 +189,15 @@ void Worker::manage_clients(void) {
     while (client_queue.size() != 0) {
       Client &client = client_queue.front();
       read_client(client);
-      if (client.buffer_ready()) {
-        handle_client(client);
-        client_queue.pop();
+      if (!client.buffer_ready()) {
+        if (client.req.buffer.length() > max_headers_size) {
+          client.end(Status::RequestHeaderFieldsTooLarge);
+          client_queue.pop();
+        }
+        continue;
       }
+      handle_client(client);
+      client_queue.pop();
     }
   }
 }
