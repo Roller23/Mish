@@ -39,6 +39,7 @@ class Response {
     Response() {
       headers.map["Content-Type"] = "text/html; charset=utf-8";
       headers.map["Content-Length"] = "0";
+      headers.map["Connection"] = "close";
     }
 };
 
