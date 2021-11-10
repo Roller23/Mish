@@ -176,7 +176,7 @@ void Worker::manage_clients(void) {
     int res = poll(pfds.data(), pfds.size(), poll_timeout);
     if (res < 0) {
       std::perror("poll()");
-      std::exit(0);
+      std::exit(EXIT_FAILURE);
     }
     for (const pollfd &pfd : pfds) {
       if (can_read_fd(pfd)) {
