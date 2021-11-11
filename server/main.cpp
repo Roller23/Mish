@@ -1,6 +1,9 @@
 #include "src/server.hpp"
 
 int main(int argc, char *argv[]) {
-  Server::serve_http(8080);
+  Server &server = Server::get();
+  server.load_config_args(argc, argv);
+  server.load_config_file();
+  server.serve_http();
   return 0;
 }

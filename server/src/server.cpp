@@ -19,6 +19,39 @@
 #include "client.hpp"
 #include "worker.hpp"
 
+#include "../../utils/utils.hpp"
+#include "../../utils/file.hpp"
+
+void Server::load_config_args(int argc, char *argv[]) {
+  for (int i = 1; i < argc; i++) {
+    const auto &arg_components = Srv::Utils::split(argv[i], '=');
+    if (arg_components.size() != 2) {
+      std::cout << "Invalid argument: " << argv[i] << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+    if (arg_components[0].substr(0, 2) != "--") {
+      std::cout << "Unknown argument: " << arg_components[0] << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+    config.load_option(arg_components[0].substr(2), arg_components[1]);
+  }
+}
+
+void Server::load_config_file(void) {
+  if (!std::filesystem::exists(config.config_file)) return;
+  const std::string &file_str = File::read(config.config_file);
+  const auto &lines = Srv::Utils::split(file_str, '\n');
+  for (auto &line : lines) {
+    const auto &arg_components = Srv::Utils::split(line, ':');
+    if (arg_components.size() != 2) {
+      std::cout << "Invalid argument: " << line << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+    const std::string &value = Srv::Utils::ltrim(arg_components[1]);
+    config.load_option(arg_components[0], value);
+  }
+}
+
 void Server::create_server_socket(const int port) {
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   int option = 1;

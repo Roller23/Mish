@@ -27,9 +27,12 @@ class Server {
       generate_threadpool();
     }
   public:
+    void load_config_args(int argc, char *argv[]);
+    void load_config_file(void);
     Worker &get_optimal_worker(void);
-    static void serve_http(const int port) {
-      return get().serve(port);
+    static void serve_http() {
+      Server &srv = get();
+      return srv.serve(srv.config.port);
     }
     Server(const Server &) = delete;
     static Server &get() {

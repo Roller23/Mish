@@ -6,3 +6,4 @@ bin
 .vscode
 public_html
 *.dSYM
+*.config

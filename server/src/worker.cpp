@@ -14,6 +14,7 @@
 #include "../../utils/path.hpp"
 #include "../../utils/utils.hpp"
 #include "../../utils/http.hpp"
+#include "../../utils/file.hpp"
 
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
@@ -25,13 +26,6 @@ const std::vector<std::string> Worker::valid_methods = {
 const std::vector<std::string> Worker::methods_containing_bodies = {
   "POST", "PUT", "PATCH"
 };
-
-static std::string read_file(const std::string &path) {
-  std::ifstream t(path);
-  std::stringstream buffer;
-  buffer << t.rdbuf();
-  return buffer.str();
-}
 
 static std::queue<std::uint64_t> get_lines_offsets(const std::string &str) {
   std::queue<std::uint64_t> res;
@@ -54,7 +48,7 @@ static std::queue<std::uint64_t> get_lines_offsets(const std::string &str) {
 }
 
 std::string Worker::process_code(const std::string &full_path, const std::string &relative_path, Client &client) {
-  std::string resource_str = read_file(full_path);
+  std::string resource_str = File::read(full_path);
   std::queue<std::uint64_t> lines_offsets;
   try {
     lines_offsets = get_lines_offsets(resource_str);
@@ -147,14 +141,17 @@ void Worker::handle_client(Client &client) {
   if (ext == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path, client);
-    if (client.should_enable_cors) {
+    if (client.should_enable_cors || config.global_cors_enabled) {
       client.enable_cors();
     }
     return client.end(client.res.script_code, code_output);
   }
   const std::string &mime_type = Mime::ext_to_mime(ext);
   client.res.add_header("Content-Type", mime_type);
-  client.end(Status::OK, read_file(requested_resource));
+  if (config.global_cors_enabled) {
+    client.enable_cors();
+  }
+  client.end(Status::OK, File::read(requested_resource));
 }
 
 void Worker::add_client(Client &client) {
