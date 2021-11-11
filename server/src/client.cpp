@@ -63,7 +63,9 @@ void Client::enable_cors(void) {
   const std::string &requested_headers = req.headers.get("Access-Control-Request-Headers");
   res.add_header("Access-Control-Allow-Origin", "*");
   res.add_header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-  res.add_header("Access-Control-Allow-Headers", requested_headers);
+  if (!requested_headers.empty()) {
+    res.add_header("Access-Control-Allow-Headers", requested_headers);
+  }
   if (req.method == "OPTIONS") {
     res.add_header("Content-Length", "0");
     res.script_code = Status::NoContent;
