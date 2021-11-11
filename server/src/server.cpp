@@ -33,8 +33,8 @@ void Server::create_server_socket(const int port) {
 }
 
 void Server::generate_threadpool(void) {
-  for (unsigned int i = 0; i < max_threads; i++) {
-    threadpool.emplace_back(file_mutex, stdout_mutex);
+  for (unsigned int i = 0; i < config.max_threads; i++) {
+    threadpool.emplace_back(file_mutex, stdout_mutex, config);
   }
   for (auto &thread : threadpool) {
     thread.start_thread();
@@ -67,9 +67,9 @@ void Server::accept_connections() {
 }
 
 void Server::serve(const int port) {
-  std::cout << max_threads << " cores detected\n";
+  std::cout << config.max_threads << " cores detected\n";
   create_server_socket(port);
-  listen(socket_fd, max_connections);
+  listen(socket_fd, config.max_connections);
   std::cout << "Listening on port " << port << "...\n";
   accept_connections();
 }

@@ -9,13 +9,11 @@
 #include "client.hpp"
 #include "worker.hpp"
 #include "map.hpp"
+#include "config.hpp"
 
 class Server {
   private:
-    unsigned int max_threads = std::thread::hardware_concurrency();
-    int max_connections = 1000;
-    int max_body_size = 1024 * 1024 * 8; // 8MB
-
+    Config config;
     Map mime_types;
     std::mutex file_mutex;
     std::mutex stdout_mutex;
