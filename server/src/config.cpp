@@ -25,7 +25,11 @@ void Config::load_option(const std::string &option, const std::string &value) {
     }
     max_connections = selected_connections;
   } else if (option == "request_size") {
-    max_body_size = std::stoi(value);
+    // value * megabytes
+    max_body_size = std::stoi(value) * 1024 * 1024;
+  } else if (option == "headers_size") {
+    // value * kilobytes
+    max_headers_size = std::stoi(value) * 1024;
   } else if (option == "enable_cors") {
     global_cors_enabled = true;
   } else if (option == "threads") {
