@@ -7,6 +7,7 @@
 
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
+#define HEADER_END "\r\n"
 
 bool Request::has_headers() const {
   return buffer.find(HEADERS_END) != std::string::npos;
@@ -40,7 +41,7 @@ void Response::end(const int code, const std::string &str) {
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
   for (const auto &it : headers.map) {
-    output += "\n" + it.first + ": " + it.second;
+    output += HEADER_END + it.first + ": " + it.second;
   }
   output += HEADERS_END;
   output += this->buffer;
