@@ -88,10 +88,10 @@ void Server::generate_threadpool(void) {
 
 Worker &Server::get_optimal_worker(void) {
   std::size_t idx = 0;
-  std::size_t min = threadpool[idx].client_queue.size();
+  int min = threadpool[idx].clients_polled;
   for (std::size_t i = 0; i < threadpool.size(); i++) {
-    if (threadpool[i].client_queue.size() < min) {
-      min = threadpool[i].client_queue.size();
+    if (threadpool[i].clients_polled < min) {
+      min = threadpool[i].clients_polled;
       idx = i;
     }
   }

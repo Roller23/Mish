@@ -19,6 +19,7 @@ class Worker {
     std::mutex &stdout_mutex;
     std::queue<Client> client_queue;
     pollfd *pfds = new pollfd[PFDS_SIZE];
+    int clients_polled = 0;
     std::thread *thread;
     static const int PFDS_SIZE = 1000;
     static const int poll_timeout = -1;

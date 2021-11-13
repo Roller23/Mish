@@ -9,6 +9,7 @@
 
 #include "worker.hpp"
 #include "mime.hpp"
+#include "status.hpp"
 
 #include "../../ckript/src/interpreter.hpp"
 #include "../../utils/path.hpp"
@@ -153,11 +154,14 @@ void Worker::handle_client(Client &client) {
 
 void Worker::add_client(Client &client) {
   client_queue.push(client);
-  // pollfd client_pfd;
-  // client_pfd.fd = client.socket_fd;
-  // client_pfd.events = POLLIN | POLLHUP;
-  // client_pfd.revents = 0;
-  // pfds.push_back(client_pfd);
+  for (int i = 1; i < PFDS_SIZE; i++) {
+    if (pfds[i].fd == -1) {
+      // pfds[i].fd = client.socket_fd; TODO
+      clients_polled++;
+      return;
+    }
+  }
+  client.end(Status::ServiceUnavailable);
 }
 
 void Worker::start_thread(void) {
@@ -197,11 +201,13 @@ void Worker::manage_clients(void) {
         if (client.req.buffer.length() > config.max_headers_size) {
           client.end(Status::RequestHeaderFieldsTooLarge);
           client_queue.pop();
+          clients_polled--;
         }
         continue;
       }
       handle_client(client);
       client_queue.pop();
+      clients_polled--;
     }
   }
 }
