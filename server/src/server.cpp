@@ -54,15 +54,27 @@ void Server::load_config_file(void) {
 
 void Server::create_server_socket(const int port) {
   socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_fd == -1) {
+    perror("socket()");
+    std::exit(EXIT_FAILURE);
+  }
   int option = 1;
   // make the socket address reusable
-  setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  int err = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+  if (err) {
+    perror("setsockopt()");
+    std::exit(EXIT_FAILURE);
+  }
   sockaddr_in address;
   memset(&address, 0, sizeof(address));
   address.sin_family = AF_INET;
   address.sin_port = htons(port);
   address.sin_addr.s_addr = htonl(INADDR_ANY);
-  bind(socket_fd, (sockaddr *)&address, sizeof(address));
+  err = bind(socket_fd, (sockaddr *)&address, sizeof(address));
+  if (err) {
+    perror("bind()");
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 void Server::generate_threadpool(void) {
@@ -90,6 +102,10 @@ void Server::accept_connections() {
   while (true) {
     Client client;
     client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
+    if (client.socket_fd == -1) {
+      perror("Could't accept a new connection");
+      continue;
+    }
     client.ip_addr = inet_ntoa(client.info.sin_addr);
     Worker &worker = get_optimal_worker();
     worker.add_client(client);
@@ -102,7 +118,11 @@ void Server::accept_connections() {
 void Server::serve(const int port) {
   std::cout << config.max_threads << " cores detected\n";
   create_server_socket(port);
-  listen(socket_fd, config.max_connections);
+  int err = listen(socket_fd, config.max_connections);
+  if (err) {
+    perror("listen()");
+    std::exit(EXIT_FAILURE);
+  }
   std::cout << "Listening on port " << port << "...\n";
   accept_connections();
 }
