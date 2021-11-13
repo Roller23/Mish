@@ -18,8 +18,9 @@ class Worker {
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
     std::queue<Client> client_queue;
-    std::vector<pollfd> pfds;
+    pollfd *pfds = new pollfd[PFDS_SIZE];
     std::thread *thread;
+    static const int PFDS_SIZE = 1000;
     static const int poll_timeout = -1;
     static const int TEMP_BUFFER_SIZE = 1024 * 8; // 8KB
     static const char PIPE_PAYLOAD = 23;
@@ -50,11 +51,14 @@ class Worker {
           std::cout << "Coudln't create worker pipe\n";
           exit(EXIT_FAILURE);
         }
-        pollfd pfd;
-        pfd.fd = _pipe[PIPE_READ];
-        pfd.events = POLLIN;
-        pfd.revents = 0;
-        pfds.push_back(pfd);
+        for (int i = 0; i < PFDS_SIZE; i++) {
+          pfds[i].fd = -1;
+          pfds[i].events = POLLIN | POLLHUP;
+          pfds[i].revents = 0;
+        }
+        // listen to writes to pipe on first poll fd
+        pfds[0].fd = _pipe[PIPE_READ];
+        pfds[0].events = POLLIN;
       }
 };
 

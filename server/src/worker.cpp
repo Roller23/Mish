@@ -176,12 +176,13 @@ bool inline Worker::can_read_fd(const pollfd &pfd) {
 
 void Worker::manage_clients(void) {
   while (true) {
-    int res = poll(pfds.data(), pfds.size(), poll_timeout);
+    int res = poll(pfds, PFDS_SIZE, poll_timeout);
     if (res < 0) {
       std::perror("poll()");
       std::exit(EXIT_FAILURE);
     }
-    for (const pollfd &pfd : pfds) {
+    for (int i = 0; i < PFDS_SIZE; i++) {
+      const pollfd &pfd = pfds[i];
       if (can_read_fd(pfd)) {
         if (pfd.fd == _pipe[PIPE_READ]) {
           // pipe was used to wake up poll()
