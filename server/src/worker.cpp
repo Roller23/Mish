@@ -99,9 +99,6 @@ void Worker::handle_client(Client &client) {
   if (client.req.length > config.max_body_size) {
     return client.end(Status::RequestEntityTooLarge);
   }
-  if (client.req.length > TEMP_BUFFER_SIZE) {
-    // TODO: read the missing body parts
-  }
   const std::vector<std::string> &request = Srv::Utils::split(request_lines[0], ' ');
   client.req.method = request[0];
   if (Srv::Utils::vector_contains(valid_methods, client.req.method)) {
