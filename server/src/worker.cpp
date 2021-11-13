@@ -127,7 +127,7 @@ void Worker::handle_client(Client &client) {
   if (has_query) {
     client.req.query = Http::parse_payload(components[1]);
   }
-  std::cout << "full request " << full_request << std::endl;
+  std::cout << "Request received: " << full_request << std::endl;
   if (!Path::safe(path)) {
     return client.end(Status::NotFound);
   }
