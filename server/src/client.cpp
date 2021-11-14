@@ -3,9 +3,14 @@
 #include "status.hpp"
 
 #include <cassert>
+#include <unistd.h>
+
+#include <string>
+#include <vector>
 
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
+#include "../../utils/date.hpp"
 
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
@@ -39,6 +44,8 @@ const std::string &Response::get_header(const std::string &key) {
 }
 
 void Response::end(const int code, const std::string &str, bool ignore_buffer) {
+  add_header("Date", Date::format("%c %Z"));
+
   append(str);
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
