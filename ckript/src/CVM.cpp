@@ -3,6 +3,7 @@
 
 #include "../../utils/uri.hpp"
 #include "../../utils/path.hpp"
+#include "../../utils/date.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -885,6 +886,18 @@ class NativeCors : public NativeFunction {
     }
 };
 
+class NativeDate : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("date() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = Date::format(args[0].string_value);
+      return res;
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -902,7 +915,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(49);
+  globals.reserve(50);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -953,4 +966,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeRedirect, redirect);
   ADD_FN(NativeDecodeUriComponent, decode_uri_component);
   ADD_FN(NativeCors, cors);
+  ADD_FN(NativeDate, date);
 }
