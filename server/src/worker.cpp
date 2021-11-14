@@ -130,7 +130,7 @@ void Worker::handle_client(Client &client) {
   }
   const std::string &request_path = components[0];
   const std::string &requested_resource = current_path + request_path;
-  const auto &path = std::filesystem::path(requested_resource).lexically_normal();
+  auto path = std::filesystem::path(requested_resource).lexically_normal();
   bool has_query = components_size == 2;
   if (has_query) {
     client.req.query = Http::parse_payload(components[1]);
@@ -139,13 +139,22 @@ void Worker::handle_client(Client &client) {
   if (!Path::safe(path)) {
     return client.end(Status::NotFound);
   }
-  if (!Path::resource_exists(requested_resource)) {
+  const bool is_index_dir = Path::is_index_directory(path);
+  if (is_index_dir && request_path.back() != '/') {
+    // redirect
+    client.res.add_header("Location", request_path + "/");
+    return client.end(Status::TemporaryRedirect);
+  }
+  if (!Path::resource_exists(path) && !is_index_dir) {
     return client.end(Status::NotFound);
+  }
+  if (is_index_dir) {
+    path = path / "index.ck";
   }
   const std::string &ext = path.extension();
   if (ext == ".ck") {
     // run the interpreter
-    const std::string &code_output = process_code(requested_resource, request_path, client);
+    const std::string &code_output = process_code(path, request_path, client);
     if (client.should_enable_cors || config.global_cors_enabled) {
       client.enable_cors();
     }

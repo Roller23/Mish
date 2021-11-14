@@ -14,3 +14,9 @@ bool Path::resource_exists(const std::string &path) {
   if (std::filesystem::is_directory(path)) return false;
   return true;
 }
+
+bool Path::is_index_directory(const std::filesystem::path &path) {
+  if (!std::filesystem::exists(path)) return false;
+  if (!std::filesystem::is_directory(path)) return false;
+  return std::filesystem::exists(path / "index.ck");
+}
