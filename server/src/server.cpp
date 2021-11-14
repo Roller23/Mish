@@ -81,9 +81,9 @@ void Server::generate_threadpool(void) {
   for (unsigned int i = 0; i < config.max_threads; i++) {
     threadpool.emplace_back(file_mutex, stdout_mutex, config);
   }
-  for (auto &thread : threadpool) {
-    thread.server_pipe = _pipe;
-    thread.start_thread();
+  for (auto &worker : threadpool) {
+    worker.server_pipe = _pipe;
+    worker.start_thread();
   }
 }
 
