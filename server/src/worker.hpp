@@ -39,7 +39,7 @@ class Worker {
     
     void read_pipe(void) const;
     void handle_client(Client &client);
-    void read_client(Client &client);
+    int read_client(Client &client);
     void remove_client(Client &client, pollfd &pfd);
     void manage_clients(void);
     static inline bool can_read_fd(const pollfd &pfd);

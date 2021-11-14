@@ -84,10 +84,11 @@ std::string Worker::process_code(const std::string &full_path, const std::string
   return resource_str;
 }
 
-void Worker::read_client(Client &client) {
+int Worker::read_client(Client &client) {
   std::memset(temp_buffer, 0, TEMP_BUFFER_SIZE);
   int r = read(client.socket_fd, temp_buffer, TEMP_BUFFER_SIZE - 1);
   client.req.buffer += temp_buffer;
+  return r;
 }
 
 void Worker::remove_client(Client &client, pollfd &pfd) {
@@ -233,7 +234,19 @@ void Worker::manage_clients(void) {
         continue;
       }
       if (!can_read_fd(pfd)) continue;
-      read_client(client);
+      int r = read_client(client);
+      if (r == -1) {
+        // an error occured while trying to read from socket
+        perror("read()");
+        close(client.socket_fd);
+        remove_client(client, pfd);
+        continue;
+      }
+      if (r == 0) {
+        // client disconnected while trying to read from socket
+        remove_client(client, pfd);
+        continue;
+      }
       if (!client.buffer_ready()) {
         if (client.req.buffer.length() > config.max_headers_size) {
           client.end(Status::RequestHeaderFieldsTooLarge);
