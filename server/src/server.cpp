@@ -102,12 +102,11 @@ Worker &Server::get_optimal_worker(void) {
 void Server::accept_connections() {
   while (true) {
     Client *client = new Client;
-    client->socket_fd = accept(socket_fd, (sockaddr *)&client->info, &client->info_len);
+    client->socket_fd = accept(socket_fd, nullptr, nullptr);
     if (client->socket_fd == -1) {
       perror("Could't accept a new connection");
       continue;
     }
-    strcpy(client->ip_addr, inet_ntoa(client->info.sin_addr));
     Worker &worker = get_optimal_worker();
     worker.pending_client = client;
     // notify the thread about the client

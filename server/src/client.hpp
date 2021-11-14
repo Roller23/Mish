@@ -1,10 +1,6 @@
 #if !defined(__CLIENT_)
 #define __CLIENT_
 
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-
 #include <string>
 
 #include "map.hpp"
@@ -48,10 +44,7 @@ class Client {
   friend class Server;
   friend class Worker;
   protected:
-    char ip_addr[20];
     int socket_fd;
-    sockaddr_in info;
-    socklen_t info_len;
     bool request_processed = false;
     bool closed = false;
   private:
