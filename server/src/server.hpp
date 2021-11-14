@@ -25,15 +25,14 @@ class Server {
     void create_server_socket(const int port);
     void accept_connections();
     void serve(const int port);
-    void generate_threadpool(void);
     Server(void) {
       if (pipe(_pipe) < 0) {
         std::cout << "Coudln't create server pipe\n";
         exit(EXIT_FAILURE);
       }
-      generate_threadpool();
     }
   public:
+    void generate_threadpool(void);
     void load_config_args(int argc, char *argv[]);
     void load_config_file(void);
     Worker &get_optimal_worker(void);
