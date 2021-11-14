@@ -219,7 +219,11 @@ void Worker::manage_clients(void) {
           }
           continue;
         }
-        Client &client = clients[pfd.fd]; // TODO: check if exists first
+        auto it = clients.find(pfd.fd);
+        if (it == clients.end()) {
+          continue;
+        }
+        Client &client = it->second;
         read_client(client);
         if (!client.buffer_ready()) {
           if (client.req.buffer.length() > config.max_headers_size) {
