@@ -37,6 +37,7 @@ class Response {
     const std::string &get_header(const std::string &key);
     void end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
     Response() {
+      headers.map["Server"] = "Mish/1.0";
       headers.map["Content-Type"] = "text/html; charset=utf-8";
       headers.map["Content-Length"] = "0";
       headers.map["Connection"] = "close";
