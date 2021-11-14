@@ -43,6 +43,7 @@ class Worker {
     void remove_client(Client &client, pollfd &pfd);
     void manage_clients(void);
     static inline bool can_read_fd(const pollfd &pfd);
+    static inline bool fd_hung_up(const pollfd &pfd);
     void report_back(void) const;
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
   public:

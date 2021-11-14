@@ -192,6 +192,10 @@ bool inline Worker::can_read_fd(const pollfd &pfd) {
   return pfd.revents & POLLIN;
 }
 
+bool inline Worker::fd_hung_up(const pollfd &pfd) {
+  return pfd.revents & POLLHUP;
+}
+
 void Worker::manage_clients(void) {
   while (true) {
     int res = poll(pfds, PFDS_SIZE, poll_timeout);
@@ -224,6 +228,11 @@ void Worker::manage_clients(void) {
           continue;
         }
         Client &client = it->second;
+        if (fd_hung_up(pfd)) {
+          // client disconnected
+          remove_client(client, pfd);
+          continue;
+        }
         read_client(client);
         if (!client.buffer_ready()) {
           if (client.req.buffer.length() > config.max_headers_size) {
