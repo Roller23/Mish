@@ -44,6 +44,7 @@ class Worker {
     void manage_clients(void);
     static inline bool can_read_fd(const pollfd &pfd);
     static inline bool fd_hung_up(const pollfd &pfd);
+    static inline bool can_write_fd(const pollfd &pfd);
     void report_back(void) const;
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
   public:
@@ -61,7 +62,7 @@ class Worker {
         clients.reserve(PFDS_SIZE);
         for (int i = 0; i < PFDS_SIZE; i++) {
           pfds[i].fd = -1;
-          pfds[i].events = POLLIN | POLLHUP;
+          pfds[i].events = POLLIN | POLLHUP | POLLOUT;
           pfds[i].revents = 0;
         }
         // listen to writes to pipe on first poll fd

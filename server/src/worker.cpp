@@ -189,12 +189,16 @@ void Worker::report_back(void) const {
   assert(w == sizeof(payload));
 }
 
-bool inline Worker::can_read_fd(const pollfd &pfd) {
+inline bool Worker::can_read_fd(const pollfd &pfd) {
   return pfd.revents & POLLIN;
 }
 
-bool inline Worker::fd_hung_up(const pollfd &pfd) {
+inline bool Worker::fd_hung_up(const pollfd &pfd) {
   return pfd.revents & POLLHUP;
+}
+
+inline bool Worker::can_write_fd(const pollfd &pfd) {
+  return pfd.revents & POLLOUT;
 }
 
 void Worker::manage_clients(void) {
@@ -206,25 +210,29 @@ void Worker::manage_clients(void) {
     }
     for (int i = 0; i < PFDS_SIZE; i++) {
       pollfd &pfd = pfds[i];
-      if (pfd.fd == _pipe[PIPE_READ] && can_read_fd(pfd)) {
-        // pipe was used to wake up poll()
-        read_pipe();
-        if (pending_client != nullptr) {
-          Client client = *pending_client;
-          delete pending_client;
-          pending_client = nullptr;
-          bool success = add_client(client);
-          report_back();
-          if (!success) {
-            client.end(Status::ServiceUnavailable);
+      if (pfd.fd == _pipe[PIPE_READ]) {
+        if (can_read_fd(pfd)) {
+          // pipe was used to wake up poll()
+          read_pipe();
+          if (pending_client != nullptr) {
+            Client client = *pending_client;
+            delete pending_client;
+            pending_client = nullptr;
+            bool success = add_client(client);
+            report_back();
+            if (!success) {
+              client.end(Status::ServiceUnavailable);
+            }
+          } else {
+            report_back();
           }
-        } else {
-          report_back();
         }
         continue;
       }
       auto it = clients.find(pfd.fd);
       if (it == clients.end()) {
+        // client not found
+        pfd.fd = -1;
         continue;
       }
       Client &client = it->second;
@@ -233,29 +241,41 @@ void Worker::manage_clients(void) {
         remove_client(client, pfd);
         continue;
       }
-      if (!can_read_fd(pfd)) continue;
-      int r = read_client(client);
-      if (r == -1) {
-        // an error occured while trying to read from socket
-        perror("read()");
-        close(client.socket_fd);
-        remove_client(client, pfd);
-        continue;
-      }
-      if (r == 0) {
-        // client disconnected while trying to read from socket
-        remove_client(client, pfd);
-        continue;
+      if (can_read_fd(pfd)) {
+        int r = read_client(client);
+        if (r == -1) {
+          // an error occured while trying to read from socket
+          perror("read()");
+          close(client.socket_fd);
+          remove_client(client, pfd);
+          continue;
+        }
+        if (r == 0) {
+          // client disconnected while trying to read from socket
+          remove_client(client, pfd);
+          continue;
+        }
       }
       if (!client.buffer_ready()) {
         if (client.req.buffer.length() > config.max_headers_size) {
-          client.end(Status::RequestHeaderFieldsTooLarge);
+          client._close();
           remove_client(client, pfd);
         }
         continue;
       }
-      handle_client(client);
-      remove_client(client, pfd);
+      if (!client.request_processed) {
+        handle_client(client);
+        if (client.closed) {
+          remove_client(client, pfd);
+        }
+        continue;
+      }
+      if (can_write_fd(pfd)) {
+        client.attempt_close();
+      }
+      if (client.closed) {
+        remove_client(client, pfd);
+      }
     }
   }
 }

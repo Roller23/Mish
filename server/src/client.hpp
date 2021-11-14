@@ -51,9 +51,11 @@ class Client {
     int socket_fd;
     sockaddr_in info;
     socklen_t info_len;
+    bool request_processed = false;
+    bool closed = false;
   private:
     void flush(void);
-    void _close(void) const;
+    void _close(void);
     bool buffer_ready(void) const;
     void enable_cors(void);
   public:
@@ -61,6 +63,7 @@ class Client {
     Request req;
     Response res;
     void end(const int code = Status::OK, const std::string &str = "");
+    void attempt_close(void);
 };
 
 #endif // __CLIENT_

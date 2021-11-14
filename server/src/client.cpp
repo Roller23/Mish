@@ -48,12 +48,17 @@ void Response::end(const int code, const std::string &str) {
 }
 
 void Client::flush(void) {
-  write(socket_fd, res.output.c_str(), res.output.length());
-  res.output = "";
+  int w = write(socket_fd, res.output.c_str(), res.output.length());
+  if (w == -1) {
+    perror("write()");
+    return;
+  }
+  res.output = res.output.erase(0, w);
 }
 
-void Client::_close(void) const {
+void Client::_close(void) {
   close(socket_fd);
+  closed = true;
 }
 
 bool Client::buffer_ready(void) const {
@@ -73,8 +78,16 @@ void Client::enable_cors(void) {
   }
 }
 
-void Client::end(const int code, const std::string &str) {
-  res.end(code, str);
+void Client::attempt_close(void) {
   flush();
-  _close();
+  if (res.output.empty()) {
+    _close();
+  }
+}
+
+void Client::end(const int code, const std::string &str) {
+  if (request_processed) return;
+  request_processed = true;
+  res.end(code, str);
+  attempt_close();
 }
