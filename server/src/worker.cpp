@@ -100,7 +100,7 @@ void Worker::remove_client(Client &client, pollfd &pfd) {
   clients_polled--;
 }
 
-void Worker::handle_client(Client &client) {
+int Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
   client.req.headers = Http::read_headers(request_lines);
   const std::string &content_length_str = client.req.get_header("Content-Length");
@@ -177,7 +177,7 @@ void Worker::handle_client(Client &client) {
   if (is_options) {
     client.res.add_header("Allow", allowed_methods);
   }
-  client.end(Status::OK, File::read(requested_resource), headers_only);
+  return client.end(Status::OK, File::read(requested_resource), headers_only);
 }
 
 bool Worker::add_client(Client &client) {
@@ -242,7 +242,10 @@ void Worker::manage_clients(void) {
             bool success = add_client(client);
             report_back();
             if (!success) {
-              client.end(Status::ServiceUnavailable);
+              int w = client.end(Status::ServiceUnavailable);
+              if (w == -1) {
+                remove_client(client, pfd);
+              }
             }
           } else {
             report_back();
@@ -285,14 +288,17 @@ void Worker::manage_clients(void) {
         continue;
       }
       if (!client.request_processed) {
-        handle_client(client);
-        if (client.closed) {
+        int w = handle_client(client);
+        if (client.closed || w == -1) {
           remove_client(client, pfd);
         }
         continue;
       }
       if (can_write_fd(pfd)) {
-        client.attempt_close();
+        int w = client.write_and_attempt_close();
+        if (w == -1) {
+          remove_client(client, pfd);
+        }
       }
       if (client.closed) {
         remove_client(client, pfd);

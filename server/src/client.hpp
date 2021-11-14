@@ -50,7 +50,7 @@ class Client {
     bool request_processed = false;
     bool closed = false;
   private:
-    void flush(void);
+    int flush(void);
     void _close(void);
     bool buffer_ready(void) const;
     void enable_cors(void);
@@ -58,8 +58,8 @@ class Client {
     bool should_enable_cors = false;
     Request req;
     Response res;
-    void end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
-    void attempt_close(void);
+    int end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
+    int write_and_attempt_close(void);
 };
 
 #endif // __CLIENT_
