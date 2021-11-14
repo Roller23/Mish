@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <filesystem>
 
 #include "client.hpp"
 #include "config.hpp"
