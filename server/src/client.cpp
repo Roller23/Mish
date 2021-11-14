@@ -27,7 +27,7 @@ bool Request::has_body() const {
 
 void Response::append(const std::string &str) {
   buffer += str;
-  headers.map["Content-Length"] = std::to_string(buffer.size());
+  headers.map["Content-Length"] = std::to_string(buffer.length());
 }
 
 void Response::add_header(const std::string &key, const std::string &value) {
@@ -38,7 +38,7 @@ const std::string &Response::get_header(const std::string &key) {
   return headers.map[key];
 }
 
-void Response::end(const int code, const std::string &str) {
+void Response::end(const int code, const std::string &str, bool ignore_buffer) {
   append(str);
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
@@ -46,7 +46,9 @@ void Response::end(const int code, const std::string &str) {
     output += HEADER_END + it.first + ": " + it.second;
   }
   output += HEADERS_END;
-  output += this->buffer;
+  if (!ignore_buffer) {
+    output += this->buffer;
+  }
 }
 
 void Client::flush(void) {
@@ -87,9 +89,9 @@ void Client::attempt_close(void) {
   }
 }
 
-void Client::end(const int code, const std::string &str) {
+void Client::end(const int code, const std::string &str, bool ignore_buffer) {
   assert(!request_processed);
   request_processed = true;
-  res.end(code, str);
+  res.end(code, str, ignore_buffer);
   attempt_close();
 }

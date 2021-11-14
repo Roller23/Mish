@@ -35,7 +35,7 @@ class Response {
     void append(const std::string &str);
     void add_header(const std::string &key, const std::string &value);
     const std::string &get_header(const std::string &key);
-    void end(const int code = Status::OK, const std::string &str = "");
+    void end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
     Response() {
       headers.map["Content-Type"] = "text/html; charset=utf-8";
       headers.map["Content-Length"] = "0";
@@ -62,7 +62,7 @@ class Client {
     bool should_enable_cors = false;
     Request req;
     Response res;
-    void end(const int code = Status::OK, const std::string &str = "");
+    void end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
     void attempt_close(void);
 };
 

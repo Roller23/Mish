@@ -21,7 +21,7 @@
 #define CKRIPT_END "&>"
 
 const std::vector<std::string> Worker::valid_methods = {
-  "GET", "POST", "DELETE", "PUT", "PATCH"
+  "GET", "POST", "DELETE", "PUT", "PATCH", "HEAD"
 };
 
 const std::vector<std::string> Worker::methods_containing_bodies = {
@@ -113,6 +113,7 @@ void Worker::handle_client(Client &client) {
     // TODO: set the correct status code
     return client.end(Status::BadRequest);
   }
+  const bool is_head = client.req.method == "HEAD";
   if (Srv::Utils::vector_contains(methods_containing_bodies, client.req.method)) {
     // read body
     client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
@@ -158,14 +159,14 @@ void Worker::handle_client(Client &client) {
     if (client.should_enable_cors || config.global_cors_enabled) {
       client.enable_cors();
     }
-    return client.end(client.res.script_code, code_output);
+    return client.end(client.res.script_code, code_output, is_head);
   }
   const std::string &mime_type = Mime::ext_to_mime(ext);
   client.res.add_header("Content-Type", mime_type);
   if (config.global_cors_enabled) {
     client.enable_cors();
   }
-  client.end(Status::OK, File::read(requested_resource));
+  client.end(Status::OK, File::read(requested_resource), is_head);
 }
 
 bool Worker::add_client(Client &client) {
