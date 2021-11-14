@@ -33,9 +33,10 @@ class Worker {
     int *server_pipe;
     static const std::vector<std::string> valid_methods;
     static const std::vector<std::string> methods_containing_bodies;
+    static const std::string allowed_methods;
+    static const std::string ckript_abort_message;
     char temp_buffer[TEMP_BUFFER_SIZE];
     const std::string current_path = std::filesystem::current_path();
-    const std::string ckript_abort_message = "ckript abort()";
     const Config &config;
     
     void read_pipe(void) const;

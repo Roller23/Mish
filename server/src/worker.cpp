@@ -28,6 +28,9 @@ const std::vector<std::string> Worker::methods_containing_bodies = {
   "POST", "PUT", "PATCH"
 };
 
+const std::string Worker::allowed_methods = "GET, POST, DELETE, PUT, PATCH, HEAD, OPTIONS";
+const std::string Worker::ckript_abort_message = "ckript abort()";
+
 static std::queue<std::uint64_t> get_lines_offsets(const std::string &str) {
   std::queue<std::uint64_t> res;
   std::uint64_t line = 1;
@@ -113,7 +116,8 @@ void Worker::handle_client(Client &client) {
     // TODO: set the correct status code
     return client.end(Status::BadRequest);
   }
-  const bool headers_only = client.req.method == "HEAD" || client.req.method == "OPTIONS";
+  const bool is_options = client.req.method == "OPTIONS";
+  const bool headers_only = client.req.method == "HEAD" || is_options;
   if (Srv::Utils::vector_contains(methods_containing_bodies, client.req.method)) {
     // read body
     client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
@@ -159,12 +163,19 @@ void Worker::handle_client(Client &client) {
     if (client.should_enable_cors || config.global_cors_enabled) {
       client.enable_cors();
     }
+    if (is_options) {
+      client.res.add_header("Allow", allowed_methods);
+    }
     return client.end(client.res.script_code, code_output, headers_only);
   }
+  // non-ckript resource request
   const std::string &mime_type = Mime::ext_to_mime(ext);
   client.res.add_header("Content-Type", mime_type);
   if (config.global_cors_enabled) {
     client.enable_cors();
+  }
+  if (is_options) {
+    client.res.add_header("Allow", allowed_methods);
   }
   client.end(Status::OK, File::read(requested_resource), headers_only);
 }

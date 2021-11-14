@@ -72,7 +72,7 @@ bool Client::buffer_ready(void) const {
 void Client::enable_cors(void) {
   const std::string &requested_headers = req.headers.get("Access-Control-Request-Headers");
   res.add_header("Access-Control-Allow-Origin", "*");
-  res.add_header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+  res.add_header("Access-Control-Allow-Methods", "GET, HEAD, PUT, PATCH, POST, DELETE");
   if (!requested_headers.empty()) {
     res.add_header("Access-Control-Allow-Headers", requested_headers);
   }
