@@ -2,6 +2,8 @@
 #include "map.hpp"
 #include "status.hpp"
 
+#include <cassert>
+
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
 
@@ -86,7 +88,7 @@ void Client::attempt_close(void) {
 }
 
 void Client::end(const int code, const std::string &str) {
-  if (request_processed) return;
+  assert(!request_processed);
   request_processed = true;
   res.end(code, str);
   attempt_close();
