@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
@@ -24,10 +25,18 @@ bool Request::has_body() const {
   if (!has_headers()) return false;
   const std::vector<std::string> &buffer_lines = Srv::Utils::split(buffer, '\n');
   const Map &req_headers = Http::read_headers(buffer_lines);
-  if (!req_headers.has("Content-Length")) return true;
+  if (!req_headers.has("content-length")) return true;
   const std::string headers_end = HEADERS_END;
   const std::size_t headers_length = buffer.find(headers_end) + headers_end.length();
-  return buffer.length() - headers_length == std::stoi(req_headers.get("Content-Length"));
+  return buffer.length() - headers_length == std::stoi(get_header("Content-Length"));
+}
+
+std::string Request::get_header(const std::string &key) const {
+  const auto it = headers.map.find(Srv::Utils::to_lower(key));
+  if (it == headers.map.end()) {
+    return "";
+  }
+  return it->second;
 }
 
 void Response::append(const std::string &str) {
@@ -45,7 +54,6 @@ const std::string &Response::get_header(const std::string &key) {
 
 void Response::end(const int code, const std::string &str, bool ignore_buffer) {
   add_header("Date", Date::format("%c %Z"));
-
   append(str);
   output = HTTP;
   output += " " + std::to_string(code) + " " + Status::to_string(code);
@@ -77,7 +85,7 @@ bool Client::buffer_ready(void) const {
 }
 
 void Client::enable_cors(void) {
-  const std::string &requested_headers = req.headers.get("Access-Control-Request-Headers");
+  const std::string &requested_headers = req.get_header("Access-Control-Request-Headers");
   res.add_header("Access-Control-Allow-Origin", "*");
   res.add_header("Access-Control-Allow-Methods", "GET, HEAD, PUT, PATCH, POST, DELETE");
   if (!requested_headers.empty()) {

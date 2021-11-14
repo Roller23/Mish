@@ -103,7 +103,7 @@ void Worker::remove_client(Client &client, pollfd &pfd) {
 void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
   client.req.headers = Http::read_headers(request_lines);
-  const std::string &content_length_str = client.req.headers.get("Content-Length");
+  const std::string &content_length_str = client.req.get_header("Content-Length");
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
   }
@@ -121,7 +121,7 @@ void Worker::handle_client(Client &client) {
   if (Srv::Utils::vector_contains(methods_containing_bodies, client.req.method)) {
     // read body
     client.req.raw_body = Http::read_body(client.req.buffer, client.req.length);
-    if (client.req.headers.get("Content-Type") == "application/x-www-form-urlencoded") {
+    if (client.req.get_header("Content-Type") == "application/x-www-form-urlencoded") {
       client.req.body = Http::parse_payload(client.req.raw_body);
     }
   }

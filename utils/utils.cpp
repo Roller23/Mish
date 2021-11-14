@@ -22,3 +22,8 @@ std::string Srv::Utils::ltrim(std::string str, const char *whitespace) {
 bool Srv::Utils::vector_contains(const std::vector<std::string> &v, const std::string &n) {
   return std::find(v.begin(), v.end(), n) == v.end();
 }
+
+std::string Srv::Utils::to_lower(std::string s) {
+  std::transform(s.begin(), s.end(), s.begin(), [](char c){return std::tolower(c);});
+  return s;
+}

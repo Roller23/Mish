@@ -16,6 +16,8 @@ class Request {
     std::size_t length = 0;
     std::string method;
 
+    std::string get_header(const std::string &key) const;
+
     bool has_headers() const;
     bool has_body() const;
 };

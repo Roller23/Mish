@@ -1,4 +1,5 @@
 #include "http.hpp"
+#include "utils.hpp"
 
 #include <vector>
 #include <string>
@@ -24,7 +25,7 @@ Map Http::read_headers(const std::vector<std::string> &lines) {
       if (length > 0 && header_value[length - 1] == '\r') {
         header_value.pop_back();
       }
-      res.map[header_components[0]] = header_value;
+      res.map[Srv::Utils::to_lower(header_components[0])] = header_value;
     }
     if (lines[i] == "\r") break;
   }
