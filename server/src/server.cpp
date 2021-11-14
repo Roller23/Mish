@@ -82,6 +82,7 @@ void Server::generate_threadpool(void) {
     threadpool.emplace_back(file_mutex, stdout_mutex, config);
   }
   for (auto &thread : threadpool) {
+    thread.server_pipe = _pipe;
     thread.start_thread();
   }
 }
@@ -100,18 +101,24 @@ Worker &Server::get_optimal_worker(void) {
 
 void Server::accept_connections() {
   while (true) {
-    Client client;
-    client.socket_fd = accept(socket_fd, (sockaddr *)&client.info, &client.info_len);
-    if (client.socket_fd == -1) {
+    Client *client = new Client;
+    client->socket_fd = accept(socket_fd, (sockaddr *)&client->info, &client->info_len);
+    if (client->socket_fd == -1) {
       perror("Could't accept a new connection");
       continue;
     }
-    client.ip_addr = inet_ntoa(client.info.sin_addr);
+    strcpy(client->ip_addr, inet_ntoa(client->info.sin_addr));
     Worker &worker = get_optimal_worker();
-    worker.add_client(client);
+    worker.pending_client = client;
+    // notify the thread about the client
     char payload = Worker::PIPE_PAYLOAD;
     int w = write(worker._pipe[Worker::PIPE_WRITE], &payload, sizeof(payload));
     assert(w == sizeof(payload));
+    // wait for the thread to report back
+    payload = 0;
+    int r = read(_pipe[Worker::PIPE_READ], &payload, sizeof(payload));
+    assert(r == sizeof(payload));
+    assert(payload == Worker::PIPE_PAYLOAD);
   }
 }
 

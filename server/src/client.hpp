@@ -47,7 +47,7 @@ class Client {
   friend class Server;
   friend class Worker;
   protected:
-    char *ip_addr;
+    char ip_addr[20];
     int socket_fd;
     sockaddr_in info;
     socklen_t info_len;

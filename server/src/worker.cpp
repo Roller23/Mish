@@ -90,6 +90,12 @@ void Worker::read_client(Client &client) {
   client.req.buffer += temp_buffer;
 }
 
+void Worker::remove_client(Client &client, pollfd &pfd) {
+  clients.erase(client.socket_fd);
+  pfd.fd = -1;
+  clients_polled--;
+}
+
 void Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
   client.req.headers = Http::read_headers(request_lines);
@@ -152,16 +158,17 @@ void Worker::handle_client(Client &client) {
   client.end(Status::OK, File::read(requested_resource));
 }
 
-void Worker::add_client(Client &client) {
-  client_queue.push(client);
+bool Worker::add_client(Client &client) {
   for (int i = 1; i < PFDS_SIZE; i++) {
     if (pfds[i].fd == -1) {
-      // pfds[i].fd = client.socket_fd; TODO
+      pfds[i].fd = client.socket_fd;
+      pfds[i].revents = 0;
+      clients[client.socket_fd] = client;
       clients_polled++;
-      return;
+      return true;
     }
   }
-  client.end(Status::ServiceUnavailable);
+  return false;
 }
 
 void Worker::start_thread(void) {
@@ -172,6 +179,13 @@ void Worker::read_pipe(void) const {
   char payload;
   int r = read(_pipe[PIPE_READ], &payload, sizeof(payload));
   assert(r == sizeof(payload) && payload == PIPE_PAYLOAD);
+}
+
+void Worker::report_back(void) const {
+  // reports back to the server after being woken up
+  char payload = Worker::PIPE_PAYLOAD;
+  int w = write(server_pipe[Worker::PIPE_WRITE], &payload, sizeof(payload));
+  assert(w == sizeof(payload));
 }
 
 bool inline Worker::can_read_fd(const pollfd &pfd) {
@@ -186,28 +200,37 @@ void Worker::manage_clients(void) {
       std::exit(EXIT_FAILURE);
     }
     for (int i = 0; i < PFDS_SIZE; i++) {
-      const pollfd &pfd = pfds[i];
+      pollfd &pfd = pfds[i];
       if (can_read_fd(pfd)) {
         if (pfd.fd == _pipe[PIPE_READ]) {
           // pipe was used to wake up poll()
           read_pipe();
+          if (pending_client != nullptr) {
+            Client client = *pending_client;
+            delete pending_client;
+            pending_client = nullptr;
+            bool success = add_client(client);
+            report_back();
+            if (!success) {
+              client.end(Status::ServiceUnavailable);
+            }
+          } else {
+            report_back();
+          }
+          continue;
         }
-      }
-    }
-    while (client_queue.size() != 0) {
-      Client &client = client_queue.front();
-      read_client(client);
-      if (!client.buffer_ready()) {
-        if (client.req.buffer.length() > config.max_headers_size) {
-          client.end(Status::RequestHeaderFieldsTooLarge);
-          client_queue.pop();
-          clients_polled--;
+        Client &client = clients[pfd.fd]; // TODO: check if exists first
+        read_client(client);
+        if (!client.buffer_ready()) {
+          if (client.req.buffer.length() > config.max_headers_size) {
+            client.end(Status::RequestHeaderFieldsTooLarge);
+            remove_client(client, pfd);
+          }
+          continue;
         }
-        continue;
+        handle_client(client);
+        remove_client(client, pfd);
       }
-      handle_client(client);
-      client_queue.pop();
-      clients_polled--;
     }
   }
 }

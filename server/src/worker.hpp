@@ -5,9 +5,10 @@
 #include <poll.h>
 
 #include <thread>
+#include <mutex>
 #include <iostream>
-#include <queue>
 #include <vector>
+#include <unordered_map>
 
 #include "client.hpp"
 #include "config.hpp"
@@ -17,7 +18,8 @@ class Worker {
   private:
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
-    std::queue<Client> client_queue;
+    std::unordered_map<int, Client> clients;
+    Client *pending_client = nullptr;
     pollfd *pfds = new pollfd[PFDS_SIZE];
     int clients_polled = 0;
     std::thread *thread;
@@ -27,6 +29,7 @@ class Worker {
     static const char PIPE_PAYLOAD = 23;
     static const int PIPE_READ = 0;
     static const int PIPE_WRITE = 1;
+    int *server_pipe;
     static const std::vector<std::string> valid_methods;
     static const std::vector<std::string> methods_containing_bodies;
     char temp_buffer[TEMP_BUFFER_SIZE];
@@ -37,12 +40,14 @@ class Worker {
     void read_pipe(void) const;
     void handle_client(Client &client);
     void read_client(Client &client);
+    void remove_client(Client &client, pollfd &pfd);
     void manage_clients(void);
     static inline bool can_read_fd(const pollfd &pfd);
+    void report_back(void) const;
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
   public:
     int _pipe[2];
-    void add_client(Client &client);
+    bool add_client(Client &client);
     void start_thread(void);
     Worker(std::mutex &file_mut, std::mutex &stdout_mut, const Config &cfg) :
       file_mutex(file_mut),
@@ -52,6 +57,7 @@ class Worker {
           std::cout << "Coudln't create worker pipe\n";
           exit(EXIT_FAILURE);
         }
+        clients.reserve(PFDS_SIZE);
         for (int i = 0; i < PFDS_SIZE; i++) {
           pfds[i].fd = -1;
           pfds[i].events = POLLIN | POLLHUP;
