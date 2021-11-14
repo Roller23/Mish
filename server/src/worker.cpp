@@ -141,7 +141,7 @@ void Worker::handle_client(Client &client) {
   if (!Path::resource_exists(requested_resource)) {
     return client.end(Status::NotFound);
   }
-  const std::string ext = path.extension();
+  const std::string &ext = path.extension();
   if (ext == ".ck") {
     // run the interpreter
     const std::string &code_output = process_code(requested_resource, request_path, client);
