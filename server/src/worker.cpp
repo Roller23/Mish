@@ -205,45 +205,44 @@ void Worker::manage_clients(void) {
     }
     for (int i = 0; i < PFDS_SIZE; i++) {
       pollfd &pfd = pfds[i];
-      if (can_read_fd(pfd)) {
-        if (pfd.fd == _pipe[PIPE_READ]) {
-          // pipe was used to wake up poll()
-          read_pipe();
-          if (pending_client != nullptr) {
-            Client client = *pending_client;
-            delete pending_client;
-            pending_client = nullptr;
-            bool success = add_client(client);
-            report_back();
-            if (!success) {
-              client.end(Status::ServiceUnavailable);
-            }
-          } else {
-            report_back();
+      if (pfd.fd == _pipe[PIPE_READ] && can_read_fd(pfd)) {
+        // pipe was used to wake up poll()
+        read_pipe();
+        if (pending_client != nullptr) {
+          Client client = *pending_client;
+          delete pending_client;
+          pending_client = nullptr;
+          bool success = add_client(client);
+          report_back();
+          if (!success) {
+            client.end(Status::ServiceUnavailable);
           }
-          continue;
+        } else {
+          report_back();
         }
-        auto it = clients.find(pfd.fd);
-        if (it == clients.end()) {
-          continue;
-        }
-        Client &client = it->second;
-        if (fd_hung_up(pfd)) {
-          // client disconnected
-          remove_client(client, pfd);
-          continue;
-        }
-        read_client(client);
-        if (!client.buffer_ready()) {
-          if (client.req.buffer.length() > config.max_headers_size) {
-            client.end(Status::RequestHeaderFieldsTooLarge);
-            remove_client(client, pfd);
-          }
-          continue;
-        }
-        handle_client(client);
-        remove_client(client, pfd);
+        continue;
       }
+      auto it = clients.find(pfd.fd);
+      if (it == clients.end()) {
+        continue;
+      }
+      Client &client = it->second;
+      if (fd_hung_up(pfd)) {
+        // client disconnected
+        remove_client(client, pfd);
+        continue;
+      }
+      if (!can_read_fd(pfd)) continue;
+      read_client(client);
+      if (!client.buffer_ready()) {
+        if (client.req.buffer.length() > config.max_headers_size) {
+          client.end(Status::RequestHeaderFieldsTooLarge);
+          remove_client(client, pfd);
+        }
+        continue;
+      }
+      handle_client(client);
+      remove_client(client, pfd);
     }
   }
 }
