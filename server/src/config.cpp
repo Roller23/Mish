@@ -31,6 +31,9 @@ void Config::load_option(const std::string &option, const std::string &value) {
     // value * kilobytes
     max_headers_size = std::stoi(value) * 1024;
   } else if (option == "enable_cors") {
+    if (value != "true") {
+      abort_loading("unknown value '" + value + "' for option '" + option + "'");
+    }
     global_cors_enabled = true;
   } else if (option == "threads") {
     int threads = std::stoi(value);
@@ -43,6 +46,9 @@ void Config::load_option(const std::string &option, const std::string &value) {
   } else if (option == "root") {
     std::filesystem::current_path(value);
   } else if (option == "disable_logs") {
+    if (value != "true") {
+      abort_loading("unknown value '" + value + "' for option '" + option + "'");
+    }
     logs_disabled = true;
   } else {
     abort_loading("unknown option '" + option + "'");
