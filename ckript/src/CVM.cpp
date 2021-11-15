@@ -889,11 +889,14 @@ class NativeCors : public NativeFunction {
 class NativeDate : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
-      if (args.size() != 1 || args[0].type != Utils::STR) {
-        VM.throw_runtime_error("date() expects one argument (str)", line);
-      }
       Value res(Utils::STR);
-      res.string_value = Date::format(args[0].string_value);
+      if (args.size() == 1 && args[0].type == Utils::STR) {
+        res.string_value = Date::format(args[0].string_value);
+      } else if (args.size() == 2 && args[0].type == Utils::STR && args[1].type == Utils::INT) {
+        res.string_value = Date::format(args[0].string_value, args[1].number_value);
+      } else {
+        VM.throw_runtime_error("date() expects at least one argument (str[,int])", line);
+      }
       return res;
     }
 };
