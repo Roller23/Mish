@@ -42,6 +42,8 @@ void Config::load_option(const std::string &option, const std::string &value) {
     config_file = value;
   } else if (option == "root") {
     std::filesystem::current_path(value);
+  } else if (option == "disable_logs") {
+    logs_disabled = true;
   } else {
     abort_loading("unknown option '" + option + "'");
   }

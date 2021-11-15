@@ -13,6 +13,7 @@ class Config {
     int max_body_size = 1024 * 1024 * 8; // 8MB
     int max_headers_size = 1024 * 16; // 16KB
     bool global_cors_enabled = false;
+    bool logs_disabled = false;
     unsigned int max_threads = std::thread::hardware_concurrency();
     std::string config_file = "server.config";
   public:

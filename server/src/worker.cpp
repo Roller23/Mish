@@ -16,9 +16,16 @@
 #include "../../utils/utils.hpp"
 #include "../../utils/http.hpp"
 #include "../../utils/file.hpp"
+#include "../../utils/date.hpp"
 
 #define CKRIPT_START "<&"
 #define CKRIPT_END "&>"
+
+#define CYAN "\u001b[36m"
+#define GREEN "\u001b[32m"
+#define YELLOW "\u001b[33m"
+#define RED "\u001b[31m"
+#define RESET "\u001b[0m"
 
 const std::vector<std::string> Worker::valid_methods = {
   "GET", "POST", "DELETE", "PUT", "PATCH", "HEAD", "OPTIONS"
@@ -100,6 +107,20 @@ void Worker::remove_client(Client &client, pollfd &pfd) {
   clients_polled--;
 }
 
+static void log_request(const std::string &request, int code) {
+  const std::string &code_str = std::to_string(code);
+  std::cout << Date::format(GREEN "[%F %I:%M%p] " RESET) << request;
+  if (code_str[0] == '4') {
+    std::cout << YELLOW;
+  } else if (code_str[0] == '5') {
+    std::cout << RED;
+  } else {
+    std::cout << CYAN;
+  }
+  std::cout << " " << code_str << " " << Status::to_string(code);
+  std::cout << RESET << std::endl;
+}
+
 int Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
   client.req.headers = Http::read_headers(request_lines);
@@ -140,7 +161,6 @@ int Worker::handle_client(Client &client) {
   if (has_query) {
     client.req.query = Http::parse_payload(components[1]);
   }
-  std::cout << "Request received: " << full_request << std::endl;
   if (!Path::safe(path)) {
     return client.end(Status::NotFound);
   }
@@ -166,6 +186,9 @@ int Worker::handle_client(Client &client) {
     if (is_options) {
       client.res.add_header("Allow", allowed_methods);
     }
+    if (!config.logs_disabled) {
+      log_request(full_request, client.res.script_code);
+    }
     return client.end(client.res.script_code, code_output, headers_only);
   }
   // non-ckript resource request
@@ -176,6 +199,9 @@ int Worker::handle_client(Client &client) {
   }
   if (is_options) {
     client.res.add_header("Allow", allowed_methods);
+  }
+  if (!config.logs_disabled) {
+    log_request(full_request, Status::OK);
   }
   return client.end(Status::OK, File::read(requested_resource), headers_only);
 }
