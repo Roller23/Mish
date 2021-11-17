@@ -13,7 +13,6 @@ std::string Token::get_name(TokenType type) {
   REG(BREAK, "break");
   REG(CONTINUE, "continue");
   REG(ALLOC, "alloc");
-  REG(DEL, "del");
   REG(TYPE, "type");
   REG(REF, "ref");
   REG(CONST, "const");

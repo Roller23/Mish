@@ -252,8 +252,6 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
             res_stack.emplace_back(SHARE_RPN(logical_not(*x)));
           } else if (token.op.type == Token::OP_NEG) {
             res_stack.emplace_back(SHARE_RPN(bitwise_not(*x)));
-          } else if (token.op.type == Token::DEL) {
-            res_stack.emplace_back(SHARE_RPN(delete_value(*x)));
           } else {
             const std::string &msg = "Unknown unary operator " + Token::get_name(token.op.type);
             throw_error(msg);
@@ -359,34 +357,6 @@ RpnElement Evaluator::Evaluator::bitwise_not(const RpnElement &x) {
   }
   throw_error("Cannot perform bitwise not on " + stringify(x_val));
   return {};
-}
-
-RpnElement Evaluator::delete_value(const RpnElement &x) {
-  const Value *val = &x.value;
-  std::shared_ptr<Variable> v = nullptr;
-  if (val->is_lvalue()) {
-    v = get_reference_by_name(val->reference_name);
-    if (v == nullptr) {
-      throw_error(val->reference_name + " is not defined");
-    }
-    val = &v->val;
-  }
-  if (val->heap_reference == -1) {
-    throw_error(x.value.reference_name + " is not allocated on heap");
-  }
-  if (val->heap_reference >= VM.heap.chunks.size()) {
-    throw_error("deleting a value that is not on the heap");
-  }
-  if (VM.heap.chunks[val->heap_reference].used == false) {
-    throw_error("double delete");
-  }
-  VM.heap.free(val->heap_reference);
-  if (v != nullptr) {
-    v->val.heap_reference = -1;
-  }
-  Value res;
-  res.type = VarType::VOID;
-  return {res};
 }
 
 RpnElement Evaluator::perform_addition(const RpnElement &x, const RpnElement &y) {

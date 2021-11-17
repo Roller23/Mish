@@ -166,9 +166,6 @@ TokenList Lexer::tokenize(const std::string &code) {
         } else if (token_str == "alloc") {
           log("token [ALLOC], ");
           add_token(Token::ALLOC);
-        } else if (token_str == "del") {
-          log("token [DEL], ");
-          add_token(Token::DEL);
         } else if (token_str == "ref") {
           log("token [REF], ");
           add_token(Token::REF);

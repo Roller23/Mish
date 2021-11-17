@@ -61,7 +61,7 @@ bool Utils::op_binary(Token::TokenType token) {
 }
 
 bool Utils::op_unary(Token::TokenType token) {
-  return token == Token::OP_NOT || token == Token::OP_NEG || token == Token::DEL;
+  return token == Token::OP_NOT || token == Token::OP_NEG;
 }
 
 int Utils::get_precedence(Expression &e) {
@@ -73,6 +73,6 @@ int Utils::get_precedence(Expression &e) {
 }
 
 bool Utils::right_assoc(Node &n) {
-  auto precedence = get_precedence(n.expr);
+  int precedence = get_precedence(n.expr);
   return precedence == 12 || precedence == 1; // REMEMBER TO CHANGE IF YOU EVER CHANGE PRECEDENCE
 }

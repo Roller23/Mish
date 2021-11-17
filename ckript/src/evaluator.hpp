@@ -78,7 +78,6 @@ class Evaluator {
     // Unary
     RpnElement logical_not(const RpnElement &x);
     RpnElement bitwise_not(const RpnElement &x);
-    RpnElement delete_value(const RpnElement &x);
 
     // Binary
     // math operations
