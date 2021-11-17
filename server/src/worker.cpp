@@ -123,7 +123,11 @@ static void log_request(const std::string &request, int code) {
 
 int Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
-  client.req.headers = Http::read_headers(request_lines);
+  int err = 0;
+  client.req.headers = Http::read_headers(request_lines, &err);
+  if (err) {
+    return client.end(Status::BadRequest);
+  }
   const std::string &content_length_str = client.req.get_header("Content-Length");
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
@@ -134,7 +138,6 @@ int Worker::handle_client(Client &client) {
   const std::vector<std::string> &request = Srv::Utils::split(request_lines[0], ' ');
   client.req.method = request[0];
   if (Srv::Utils::vector_contains(valid_methods, client.req.method)) {
-    // TODO: set the correct status code
     return client.end(Status::BadRequest);
   }
   const bool is_options = client.req.method == "OPTIONS";

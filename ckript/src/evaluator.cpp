@@ -193,7 +193,6 @@ Value Evaluator::evaluate_expression(const NodeList &expression_tree, const bool
   RpnStack rpn_stack;
   rpn_stack.reserve(100);
   flatten_tree(rpn_stack, expression_tree);
-  // TODO: cache the result somehow
   SharedRpnStack res_stack;
   assert(rpn_stack.size() != 0);
   res_stack.reserve(rpn_stack.size() * 3);

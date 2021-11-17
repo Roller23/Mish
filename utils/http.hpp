@@ -8,7 +8,7 @@
 
 class Http {
   public:
-    static Map read_headers(const std::vector<std::string> &lines);
+    static Map read_headers(const std::vector<std::string> &lines, int *err = nullptr);
     static Map parse_payload(const std::string &str);
     static std::string read_body(const std::string &str, const std::size_t n = 0);
 };

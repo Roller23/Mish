@@ -11,17 +11,24 @@
 
 #define HEADERS_END "\r\n\r\n"
 
-Map Http::read_headers(const std::vector<std::string> &lines) {
+Map Http::read_headers(const std::vector<std::string> &lines, int *err) {
   if (lines.size() <= 1) return {}; 
   Map res;
   for (std::size_t i = 1; i < lines.size(); i++) {
     if (lines[i].find(":") != std::string::npos) {
       std::vector<std::string> header_components = Srv::Utils::split(lines[i], ':');
-      if (header_components.size() != 2) {
-        continue; // TODO
+      const std::size_t components_size = header_components.size();
+      if (components_size < 2) {
+        if (err != nullptr) *err = 1;
+        return {};
+      }
+      if (components_size > 2) {
+        for (std::size_t j = 2; j < components_size; j++) {
+          header_components[1] += ":" + header_components[j];
+        }
       }
       std::string header_value = Srv::Utils::ltrim(header_components[1]);
-      const auto length = header_value.length();
+      const std::size_t length = header_value.length();
       if (length > 0 && header_value[length - 1] == '\r') {
         header_value.pop_back();
       }
