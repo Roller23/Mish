@@ -1,5 +1,6 @@
 #include "CVM.hpp"
 #include "utils.hpp"
+#include "evaluator.hpp"
 
 #include "../../utils/uri.hpp"
 #include "../../utils/path.hpp"
@@ -226,6 +227,79 @@ std::string CVM::stringify(Value &val) const {
     return str;
   }
   return "";
+}
+
+// garbage collector
+
+void CVM::mark_chunk(Chunk &chunk) {
+  if (chunk.marked) return;
+  chunk.marked = true;
+  if (chunk.data->type == Utils::ARR) {
+    for (const Value &arr_val : chunk.data->array_values) {
+      if (arr_val.heap_reference == -1) continue;
+      mark_chunk(heap.chunks[arr_val.heap_reference]);
+    }
+  } else if (chunk.data->type == Utils::OBJ) {
+    for (const auto &pair : chunk.data->member_values) {
+      const Value &obj_val = pair.second;
+      if (obj_val.heap_reference == -1) continue;
+      mark_chunk(heap.chunks[obj_val.heap_reference]);
+    }
+  }
+}
+
+void CVM::mark_all(void) {
+  for (const Evaluator *ev : active_evaluators) {
+    for (const auto &pair : ev->stack) {
+      const std::shared_ptr<Variable> var = pair.second;
+      if (var->is_allocated()) {
+        mark_chunk(heap.chunks[var->val.heap_reference]);
+      } else if (var->val.type == Utils::ARR) {
+        for (const Value &arr_val : var->val.array_values) {
+          if (arr_val.heap_reference == -1) continue;
+          mark_chunk(heap.chunks[arr_val.heap_reference]);
+        }
+      } else if (var->val.type == Utils::OBJ) {
+        for (const auto &pair : var->val.member_values) {
+          const Value &obj_val = pair.second;
+          if (obj_val.heap_reference == -1) continue;
+          mark_chunk(heap.chunks[obj_val.heap_reference]);
+        }
+      }
+    }
+  }
+}
+
+std::size_t CVM::sweep(void) {
+  std::size_t swept_chunks = 0;
+  for (Chunk &chunk : heap.chunks) {
+    if (!chunk.used) continue;
+    if (!chunk.marked) {
+      heap.free(chunk.heap_reference);
+      swept_chunks++;
+    } else {
+      chunk.marked = false;
+    }
+  }
+  return swept_chunks;
+}
+
+std::size_t CVM::run_gc(void) {
+  mark_all();
+  return sweep();
+}
+
+void CVM::check_chunks(void) {
+  if (allocated_chunks < chunks_limit) return;
+  const std::size_t freed_chunks = run_gc();
+  allocated_chunks -= freed_chunks;
+  chunks_limit = allocated_chunks * limit_scale_factor;
+}
+
+Chunk &CVM::allocate(void) {
+  Chunk &chunk = heap.allocate();
+  allocated_chunks++;
+  return chunk;
 }
 
 // stdlib

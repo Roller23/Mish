@@ -53,6 +53,7 @@ class Chunk {
     Value *data = nullptr;
     std::int64_t heap_reference = -1;
     bool used = false;
+    bool marked = false;
 };
 
 class Cache {
@@ -102,10 +103,19 @@ class StackTrace {
 };
 
 class NativeFunction;
+class Evaluator;
 
 class CVM {
   private:
+    void mark_chunk(Chunk &chunk);
+    void mark_all(void);
+    std::size_t sweep(void);
+    std::size_t run_gc(void);
+
     void load_stdlib(void);
+    std::size_t allocated_chunks = 0;
+    std::size_t chunks_limit = 5;
+    const std::size_t limit_scale_factor = 2;
   public:
     std::string actual_path(const std::string &filename) const;
     std::string stringify(Value &val) const;
@@ -119,7 +129,10 @@ class CVM {
     std::mutex &file_mutex;
     std::mutex &stdout_mutex;
     Client &client;
+    std::vector<Evaluator *> active_evaluators;
     void destroy_globals(void);
+    Chunk &allocate(void);
+    void check_chunks(void);
     void throw_syntax_error(const std::string &cause, std::uint32_t line = 0);
     void throw_runtime_error(const std::string &cause, std::uint32_t line = 0);
     void throw_file_error(const std::string &cause);

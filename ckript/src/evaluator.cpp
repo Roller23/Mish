@@ -803,7 +803,7 @@ void Evaluator::declare_variable(const Node &declaration) {
   }
   if (decl.allocated) {
     assert(decl.reference == false);
-    const Chunk &chunk = VM.heap.allocate();
+    const Chunk &chunk = VM.allocate();
     auto &var = (stack[decl.id] = std::make_shared<Variable>());
     var->val.heap_reference = chunk.heap_reference;
     var->type = decl.var_type;
@@ -817,6 +817,7 @@ void Evaluator::declare_variable(const Node &declaration) {
       }
       native_bind->execute(args, current_line, VM);
     }
+    VM.check_chunks();
     return;
   }
   auto &var = (stack[decl.id] = std::make_shared<Variable>());
@@ -992,7 +993,9 @@ RpnElement Evaluator::execute_function(RpnElement &fn, const RpnElement &call) {
   }
   const std::string &fn_name = fn.value.is_lvalue() ? fn.value.reference_name : fn_value.func_name;
   VM.trace.push(fn_name, current_line, current_source);
+  VM.active_evaluators.push_back(&func_evaluator);
   func_evaluator.start();
+  VM.active_evaluators.pop_back();
   if (fn_value.func.ret_ref) {
     if (func_evaluator.return_value.heap_reference == -1) {
       const std::string &msg = "function returns a reference, but " + stringify(func_evaluator.return_value) + " was returned";

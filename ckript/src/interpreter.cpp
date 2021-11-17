@@ -18,7 +18,9 @@ void Interpreter::process_string(const std::string &code, std::uint64_t line_off
     evaluator->AST = AST;
   }
   evaluator->stack.reserve(100);
+  evaluator->VM.active_evaluators.push_back(evaluator);
   evaluator->start();
+  evaluator->VM.active_evaluators.pop_back();
 }
 
 void Interpreter::destroy() {
