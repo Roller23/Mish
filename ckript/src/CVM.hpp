@@ -75,7 +75,7 @@ class Heap {
     Cache cache;
     Chunk &allocate();
     void free(std::int64_t ref);
-    void destroy(void);
+    void destroy(void) const;
 };
 
 typedef std::unordered_map<std::string, std::shared_ptr<Variable>> CallStack;

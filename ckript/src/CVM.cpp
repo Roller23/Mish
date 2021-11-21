@@ -49,7 +49,7 @@ void StackTrace::push(const std::string &_name, const std::uint64_t &_line, cons
 }
 
 bool Value::is_lvalue() const {
-  return reference_name.size() != 0;
+  return !reference_name.empty();
 }
 
 bool Variable::is_allocated() const {
@@ -69,15 +69,14 @@ std::int64_t Cache::pop(void) {
 }
 
 Chunk &Heap::allocate() {
-  std::int64_t index = cache.pop();
+  const std::int64_t index = cache.pop();
   if (index != -1) {
     Chunk &chunk = chunks[index];
     chunk.used = true;
     return chunk;
   }
   // add a new chunk
-  chunks.push_back(Chunk());
-  Chunk &chunk_ref = chunks.back();
+  Chunk &chunk_ref = chunks.emplace_back();
   chunk_ref.used = true;
   chunk_ref.data = new Value;
   chunk_ref.heap_reference = chunks.size() - 1;
@@ -85,22 +84,13 @@ Chunk &Heap::allocate() {
 }
 
 void Heap::free(std::int64_t ref) {
-  Chunk &chunk = chunks[ref];
-  chunk.used = false;
+  chunks[ref].used = false;
   cache.push(ref);
 }
 
-void Heap::destroy(void) {
-  // push all allocated chunks to cache
+void Heap::destroy(void) const {
   for (const Chunk &chunk : chunks) {
-    if (chunk.used) {
-      this->free(chunk.heap_reference);
-    }
-  }
-  while (true) {
-    std::int64_t ref = cache.pop();
-    if (ref == -1) break;
-    delete chunks[ref].data;
+    delete chunk.data;
   }
 }
 
