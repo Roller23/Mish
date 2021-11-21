@@ -1,7 +1,7 @@
 CC := g++
 ckript_bin := ckript/bin/
 ckript_out := $(ckript_bin)ckript
-flags := -O0 -g -std=c++17 -pthread
+flags := -O3 -std=c++17 -pthread
 ckript_src := ckript/src/
 server_src := server/src/
 utils_src := utils/

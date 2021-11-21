@@ -344,12 +344,7 @@ TokenList Lexer::process_file(const std::string &filename) {
   if (!file.good()) {
     VM.throw_file_error("Couldn't open " + filename);
   }
-  // TODO: use std::filesystem::path to get parent dir
-  std::int64_t pos = filename.find_last_of("/\\");
-  if (pos != -1) {
-    file_dir = filename.substr(0, pos);
-    file_name = filename.substr(pos + 1);
-  }
+  set_filename(filename);
   std::string buffer(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>{});
   return tokenize(buffer);
 }
