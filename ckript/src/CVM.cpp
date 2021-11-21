@@ -992,6 +992,24 @@ class NativeDate : public NativeFunction {
     }
 };
 
+class NativeSameref : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 2) {
+        VM.throw_runtime_error("same_ref() expects two arguments (ref, ref)", line);
+      }
+      if (args[0].heap_reference == -1) {
+        VM.throw_runtime_error("same_ref(): first argument is not a reference", line);
+      }
+      if (args[1].heap_reference == -1) {
+        VM.throw_runtime_error("same_ref(): second argument is not a reference", line);
+      }
+      Value res(Utils::BOOL);
+      res.boolean_value = args[0].heap_reference == args[1].heap_reference;
+      return res;
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -1009,7 +1027,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(50);
+  globals.reserve(51);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1061,4 +1079,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeDecodeUriComponent, decode_uri_component);
   ADD_FN(NativeCors, cors);
   ADD_FN(NativeDate, date);
+  ADD_FN(NativeSameref, same_ref);
 }
