@@ -87,7 +87,7 @@ void Server::generate_threadpool(void) {
   }
 }
 
-Worker &Server::get_optimal_worker(void) {
+Worker &Server::get_optimal_worker(int *err) {
   std::size_t idx = 0;
   int min = threadpool[idx].clients_polled;
   for (std::size_t i = 0; i < threadpool.size(); i++) {
@@ -95,6 +95,9 @@ Worker &Server::get_optimal_worker(void) {
       min = threadpool[i].clients_polled;
       idx = i;
     }
+  }
+  if (threadpool[idx].clients_polled > Worker::PFDS_SIZE && err != nullptr) {
+    *err = 1;
   }
   return threadpool[idx];
 }
@@ -107,7 +110,13 @@ void Server::accept_connections() {
       perror("Could't accept a new connection");
       continue;
     }
-    Worker &worker = get_optimal_worker();
+    int err = 0;
+    Worker &worker = get_optimal_worker(&err);
+    if (err) {
+      close(client->socket_fd);
+      std::cout << "All workers are busy";
+      continue;
+    }
     worker.pending_client = client;
     // notify the thread about the client
     char payload = Worker::PIPE_PAYLOAD;

@@ -35,7 +35,7 @@ class Server {
     void generate_threadpool(void);
     void load_config_args(int argc, char *argv[]);
     void load_config_file(void);
-    Worker &get_optimal_worker(void);
+    Worker &get_optimal_worker(int *err = nullptr);
     static void serve_http() {
       Server &srv = get();
       return srv.serve(srv.config.port);
