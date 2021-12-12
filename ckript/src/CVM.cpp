@@ -967,6 +967,18 @@ class NativeCors : public NativeFunction {
     }
 };
 
+class NativeMethod : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 0) {
+        VM.throw_runtime_error("method() expects no arguments", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = VM.client.req.method;
+      return res;
+    }
+};
+
 class NativeDate : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -1017,7 +1029,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(51);
+  globals.reserve(52);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1068,6 +1080,7 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeRedirect, redirect);
   ADD_FN(NativeDecodeUriComponent, decode_uri_component);
   ADD_FN(NativeCors, cors);
+  ADD_FN(NativeMethod, method);
   ADD_FN(NativeDate, date);
   ADD_FN(NativeSameref, same_ref);
 }
