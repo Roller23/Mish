@@ -48,6 +48,7 @@ class Worker {
     static inline bool fd_hung_up(const pollfd &pfd);
     static inline bool can_write_fd(const pollfd &pfd);
     void report_back(void) const;
+    void log_request(const std::string &request, int code) const;
     std::string process_code(const std::string &full_path, const std::string &relative_path, Client &client);
   public:
     int _pipe[2];

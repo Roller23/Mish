@@ -107,7 +107,8 @@ void Worker::remove_client(Client &client, pollfd &pfd) {
   clients_polled--;
 }
 
-static void log_request(const std::string &request, int code) {
+void Worker::log_request(const std::string &request, int code) const {
+  if (config.logs_disabled) return;
   const std::string &code_str = std::to_string(code);
   std::cout << Date::format(GREEN "[%F %I:%M%p] " RESET) << request;
   if (code_str[0] == '4') {
@@ -165,15 +166,18 @@ int Worker::handle_client(Client &client) {
     client.req.query = Http::parse_payload(components[1]);
   }
   if (!Path::safe(path)) {
+    log_request(full_request, Status::NotFound);
     return client.end(Status::NotFound);
   }
   const bool is_index_dir = Path::is_index_directory(path);
   if (is_index_dir && request_path.back() != '/') {
     // redirect
     client.res.add_header("Location", request_path + "/");
+    log_request(full_request, Status::TemporaryRedirect);
     return client.end(Status::TemporaryRedirect);
   }
   if (!Path::resource_exists(path) && !is_index_dir) {
+    log_request(full_request, Status::NotFound);
     return client.end(Status::NotFound);
   }
   if (is_index_dir) {
@@ -189,9 +193,7 @@ int Worker::handle_client(Client &client) {
     if (is_options) {
       client.res.add_header("Allow", allowed_methods);
     }
-    if (!config.logs_disabled) {
-      log_request(full_request, client.res.script_code);
-    }
+    log_request(full_request, client.res.script_code);
     return client.end(client.res.script_code, code_output, headers_only);
   }
   // non-ckript resource request
@@ -203,9 +205,7 @@ int Worker::handle_client(Client &client) {
   if (is_options) {
     client.res.add_header("Allow", allowed_methods);
   }
-  if (!config.logs_disabled) {
-    log_request(full_request, Status::OK);
-  }
+  log_request(full_request, Status::OK);
   return client.end(Status::OK, File::read(requested_resource), headers_only);
 }
 
