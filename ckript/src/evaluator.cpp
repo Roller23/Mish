@@ -134,8 +134,8 @@ int Evaluator::execute_statement(const Node &statement) {
     return FLAG_OK;
   } else if (statement.stmt.type == StmtType::FOR) {
     if (statement.stmt.expressions.size() != 3) {
-      std::string given = std::to_string(statement.stmt.expressions.size());
-      throw_error("For expects 3 expressions, " + given + " given");
+      const std::string &expressions_given = std::to_string(statement.stmt.expressions.size());
+      throw_error("For expects 3 expressions, " + expressions_given + " given");
     }
     if (statement.stmt.statements.size() == 0) return FLAG_OK; // might cause bugs
     if (statement.stmt.expressions[0].size() != 0) {
@@ -177,11 +177,9 @@ int Evaluator::execute_statement(const Node &statement) {
     if (result.boolean_value) {
       int flag = execute_statement(statement.stmt.statements[0]);
       if (flag) return flag;
-    } else {
-      if (statement.stmt.statements.size() == 2) {
-        int flag = execute_statement(statement.stmt.statements[1]);
-        if (flag) return flag;
-      }
+    } else if (statement.stmt.statements.size() == 2) {
+      int flag = execute_statement(statement.stmt.statements[1]);
+      if (flag) return flag;
     }
     return FLAG_OK;
   }
