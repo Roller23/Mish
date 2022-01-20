@@ -73,10 +73,10 @@ std::string Worker::process_code(const std::string &full_path, const std::string
     if (first == std::string::npos) break;
     auto last = resource_str.find(CKRIPT_END);
     const std::string &code = resource_str.substr(first + tag_size, last - first - tag_size);
+    if (lines_offsets.empty()) {
+      return "<body>Parsing error: Mismatched Ckript tags number</body>";
+    }
     try {
-      if (lines_offsets.empty()) {
-        return "<body>Parsing error: Mismatched Ckript tags number</body>";
-      }
       interpreter.process_string(code, lines_offsets.front());
       lines_offsets.pop();
       resource_str = resource_str.replace(first, last - first + tag_size, interpreter.VM.output_buffer);
