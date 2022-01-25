@@ -942,7 +942,7 @@ RpnElement Evaluator::execute_function(RpnElement &fn, const RpnElement &call) {
   if (fn_value.this_ref != -1) {
     // push "this" onto the stack
     auto &var = (func_evaluator.stack["this"] = std::make_shared<Variable>());
-    var->type = "obj"; // TODO: check if this is correct??
+    var->type = "obj";
     var->val.heap_reference = fn_value.this_ref;
   }
   if (fn_value.func.captures) {
