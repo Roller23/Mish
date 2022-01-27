@@ -224,6 +224,7 @@ std::string CVM::stringify(Value &val) const {
 void CVM::mark_chunk(Chunk &chunk) {
   if (chunk.marked) return;
   chunk.marked = true;
+  std::cout << "Marked value '" << stringify(*chunk.data) << "' on heap\n";
   if (chunk.data->type == Utils::ARR) {
     for (const Value &arr_val : chunk.data->array_values) {
       if (arr_val.heap_reference == -1) continue;
@@ -239,6 +240,7 @@ void CVM::mark_chunk(Chunk &chunk) {
 }
 
 void CVM::mark_all(void) {
+  std::cout << "Running mark phase\n";
   for (const Evaluator *ev : active_evaluators) {
     for (const auto &pair : ev->stack) {
       const std::shared_ptr<Variable> var = pair.second;
@@ -261,20 +263,24 @@ void CVM::mark_all(void) {
 }
 
 std::size_t CVM::sweep(void) {
+  std::cout << "Running sweep phase\n";
   std::size_t swept_chunks = 0;
   for (Chunk &chunk : heap.chunks) {
     if (!chunk.used) continue;
     if (!chunk.marked) {
       heap.free(chunk.heap_reference);
+      std::cout << "Swept value '" << stringify(*chunk.data) << "' from heap\n";
       swept_chunks++;
     } else {
       chunk.marked = false;
     }
   }
+  std::cout << "Swept " << swept_chunks << " chunks in total\n";
   return swept_chunks;
 }
 
 std::size_t CVM::run_gc(void) {
+  std::cout << "Running garbage collector\n";
   mark_all();
   return sweep();
 }
