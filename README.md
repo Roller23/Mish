@@ -17,7 +17,7 @@ Simply run the `mish` command in the directory with your web server files.
 
 ## Scripting
 
-Mish includes a fork of the [Ckript programming language](https://github.com/Roller23/ckript-lang) modified to suit backend development better.
+Mish includes a fork of the [Ckript programming language](https://github.com/Roller23/ckript-lang) modified to better suit backend development.
 
 The following functions were added:
 - `echo([any, ]) void` – expects at least one argument of any type. Renders the string representation of the passed arguments to the client.
@@ -32,6 +32,14 @@ The following functions were added:
 - `decode_uri_component(str component) str` – decodes an encoded URI component and returns it.
 - `cors(void)` – enables cross-origin resource sharing for the particular request.
 - `date(str format[, int timestamp])` – returns a formatted string of the current date. If the second argument is present, the function uses the specified timestamp instead of the current date.
+
+### Usage
+
+All files with the `.ck` extension are treated as scripting files and Mish will attempt to find and execute Ckript code snippets before sending data back to the client.
+
+Here's an example `.ck` script:
+
+
 
 ## Configuration
 
