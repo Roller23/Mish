@@ -15,6 +15,24 @@ WIP
 
 Simply run the `mish` command in the directory with your web server files.
 
+## Scripting
+
+Mish includes a fork of the [Ckript programming language](https://github.com/Roller23/ckript-lang) modified to suit backend development better.
+
+The following functions were added:
+- `echo([any, ]) void` – expects at least one argument of any type. Renders the string representation of the passed arguments to the client.
+- `render(str filePath) void` – reads the file specified by the passed path and renders it.
+- `abort([str]) void` – aborts the script early with an optional message rendered to the client.
+- `redirect(str location) void` – redirects the client to the specified location.
+- `query(str key) str` – reads and returns the query value specified by the key.
+- `body(str key) str` – returns a value from the request body by the specified key.
+- `res_header(str key[, str value]) str` – appends a new header to the response. If the `value` argument is omitted, the function returns a value from the response headers by the specified key.
+- `req_header(str key) str` – returns a value from the request headers by the specified key.
+- `code(int) void` – sets the response status code.
+- `decode_uri_component(str component) str` – decodes an encoded URI component and returns it.
+- `cors(void)` – enables cross-origin resource sharing for the particular request.
+- `date(str format[, int timestamp])` – returns a formatted string of the current date. If the second argument is present, the function uses the specified timestamp instead of the current date.
+
 ## Configuration
 
 There are serveral options that allow you to configure the server. The available CLI flags are:
