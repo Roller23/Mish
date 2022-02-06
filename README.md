@@ -39,7 +39,13 @@ All files with the `.ck` extension are treated as scripting files and Mish will 
 
 Here's an example `.ck` script:
 
+![image](https://user-images.githubusercontent.com/25384028/152679169-732c21aa-f6e4-4090-bfb1-21f94ad28396.png)
 
+Ckript code can be freely mixed with HTML. Mish will look for code snippets between the `<&` and `&>` tags and execute them.
+
+Here's the script's output in a browser:
+
+![image](https://user-images.githubusercontent.com/25384028/152679207-238bbdae-375e-4f86-a914-1e2ba3a2f64a.png)
 
 ## Configuration
 
