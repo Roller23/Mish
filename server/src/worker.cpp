@@ -125,10 +125,7 @@ void Worker::log_request(const std::string &request, int code) const {
 int Worker::handle_client(Client &client) {
   const std::vector<std::string> &request_lines = Srv::Utils::split(client.req.buffer, '\n');
   int err = 0;
-  client.req.headers = Http::read_headers(request_lines, &err);
-  if (err) {
-    return client.end(Status::BadRequest);
-  }
+  client.req.headers = Http::read_headers(request_lines);
   const std::string &content_length_str = client.req.get_header("Content-Length");
   if (content_length_str != "") {
     client.req.length = std::stoul(content_length_str);
