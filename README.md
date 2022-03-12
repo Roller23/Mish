@@ -26,6 +26,7 @@ The following functions were added:
 - `redirect(str location) void` – redirects the client to the specified location.
 - `query(str key) str` – reads and returns the query value specified by the key.
 - `body(str key) str` – returns a value from the request body by the specified key.
+- `html_escape(str) str` - escapes HTML special characters and returns the sanitized string.
 - `res_header(str key[, str value]) str` – appends a new header to the response. If the `value` argument is omitted, the function returns a value from the response headers by the specified key.
 - `req_header(str key) str` – returns a value from the request headers by the specified key.
 - `code(int) void` – sets the response status code.

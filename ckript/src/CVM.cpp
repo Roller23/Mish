@@ -994,6 +994,35 @@ class NativeDate : public NativeFunction {
     }
 };
 
+class NativeHtmlescape : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("html_escape() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      const std::size_t str_len = args[0].string_value.length();
+      res.string_value.reserve(str_len);
+      for (std::size_t i = 0; i < str_len; i++) {
+        const char &c = args[0].string_value[i];
+        if (c == '&') {
+          res.string_value.append("&amp;");
+        } else if (c == '\"') {
+          res.string_value.append("&quot;");
+        } else if (c == '\'') {
+          res.string_value.append("&apos;");
+        } else if (c == '<') {
+          res.string_value.append("&lt;");
+        } else if (c == '>') {
+          res.string_value.append("&gt;");
+        } else {
+          res.string_value.append(&c, 1);
+        }
+      }
+      return res;
+    }
+};
+
 class NativeSameref : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -1029,7 +1058,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(52);
+  globals.reserve(53);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1083,4 +1112,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeMethod, method);
   ADD_FN(NativeDate, date);
   ADD_FN(NativeSameref, same_ref);
+  ADD_FN(NativeHtmlescape, html_escape);
 }
