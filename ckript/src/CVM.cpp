@@ -18,6 +18,7 @@
 #include <cstring>
 #include <thread>
 #include <algorithm>
+#include <regex>
 
 #define REG_FN(name, fn)\
   class name : public NativeFunction {\
@@ -708,6 +709,39 @@ class NativeSubstr : public NativeFunction {
     }
 };
 
+class NativeReplace : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 3 || args[0].type != Utils::STR || args[1].type != Utils::STR || args[2].type != Utils::STR) {
+        VM.throw_runtime_error("replace() expects three arguments (str, str, str)", line);
+      }
+      const std::size_t index = args[0].string_value.find(args[1].string_value);
+      if (index == std::string::npos) {
+        return args[0];
+      }
+      Value res(Utils::STR);
+      const std::size_t str_len = args[1].string_value.length();
+      res.string_value = args[0].string_value.replace(index, str_len, args[2].string_value);
+      return res;
+    }
+};
+
+class NativeReplaceall : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 3 || args[0].type != Utils::STR || args[1].type != Utils::STR || args[2].type != Utils::STR) {
+        VM.throw_runtime_error("replace_all() expects three arguments (str, str, str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = std::regex_replace(
+        args[0].string_value,
+        std::regex(args[1].string_value),
+        args[2].string_value
+      );
+      return res;
+    }
+};
+
 class NativeSplit : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -1058,7 +1092,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(53);
+  globals.reserve(55);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1093,6 +1127,8 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeRandf, randf)
   ADD_FN(NativeContains, contains)
   ADD_FN(NativeSubstr, substr)
+  ADD_FN(NativeReplace, replace);
+  ADD_FN(NativeReplaceall, replace_all);
   ADD_FN(NativeSplit, split)
   ADD_FN(NativeTobytes, to_bytes)
   ADD_FN(NativeFrombytes, from_bytes)
