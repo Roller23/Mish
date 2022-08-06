@@ -5,7 +5,12 @@
 
 #include <cassert>
 #include <unistd.h>
-#include <uuid/uuid.h>
+
+#if __APPLE__
+  #include <uuid/uuid.h>
+#else
+  #include <uuid.h>
+#endif
 
 #include <string>
 #include <vector>
