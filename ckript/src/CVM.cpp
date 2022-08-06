@@ -1075,6 +1075,16 @@ class NativeSameref : public NativeFunction {
     }
 };
 
+class NativeSessionstart : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 0) {
+        VM.throw_runtime_error("session_start() expects no arguments", line);
+      }
+      return {Utils::VOID};
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -1092,7 +1102,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(55);
+  globals.reserve(56);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1149,4 +1159,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeDate, date);
   ADD_FN(NativeSameref, same_ref);
   ADD_FN(NativeHtmlescape, html_escape);
+  ADD_FN(NativeSessionstart, session_start);
 }
