@@ -642,6 +642,7 @@ class NativeAbs : public NativeFunction {
     }
 };
 
+// TODO: export generators to globals
 class NativeRand : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
