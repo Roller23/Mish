@@ -142,6 +142,11 @@ void Client::end_session(void) {
   return this->session->destroy();
 }
 
+std::string Client::get_session_token(void) {
+  if (this->session == nullptr) return "";
+  return this->session->id;
+}
+
 void Session::load(void) {
   if (this->id == "") {
     uuid_t uuid;

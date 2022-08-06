@@ -71,6 +71,7 @@ class Client {
     int write_and_attempt_close(void);
     void start_session(void);
     void end_session(void);
+    std::string get_session_token(void);
 };
 
 #endif // __CLIENT_
