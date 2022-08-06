@@ -43,6 +43,7 @@ class Server {
     static bool session_has(const std::string &id, const std::string &key);
     static std::string session_get(const std::string &id, const std::string &key);
     static void session_set(const std::string &id, const std::string &key, const std::string &value);
+    static void session_unset(const std::string &id, const std::string &key);
     static void serve_http() {
       Server &srv = get();
       return srv.serve(srv.config.port);

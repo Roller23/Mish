@@ -73,6 +73,7 @@ class Client {
     void end_session(void);
     std::string get_session_token(void);
     void session_set(const std::string &key, const std::string &value);
+    void session_unset(const std::string &key);
     std::string session_get(const std::string &key) const;
     bool session_has(const std::string &key) const;
 };

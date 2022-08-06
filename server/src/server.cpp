@@ -175,3 +175,8 @@ void Server::session_set(const std::string &id, const std::string &key, const st
   if (!check_session_id(id)) return;
   session_storage[id][key] = value;
 }
+
+void Server::session_unset(const std::string &id, const std::string &key) {
+  if (!session_has(id, key)) return;
+  session_storage[id].erase(key);
+}

@@ -173,6 +173,11 @@ void Session::destroy(void) {
 void Client::session_set(const std::string &key, const std::string &value) {
   Server::session_set(this->session.id, key, value);
 }
+
+void Client::session_unset(const std::string &key) {
+  Server::session_unset(this->session.id, key);
+}
+
 std::string Client::session_get(const std::string &key) const {
   return Server::session_get(this->session.id, key);
 }
