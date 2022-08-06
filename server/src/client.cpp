@@ -15,6 +15,7 @@
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
 #include "../../utils/date.hpp"
+#include "../../utils/utils.hpp"
 
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
@@ -131,23 +132,31 @@ int Client::end(const int code, const std::string &str, bool ignore_buffer) {
 }
 
 void Client::start_session(void) {
-  if (this->session == nullptr) {
-    this->session = new Session();
-  }
-  this->session->load();
+  this->session.load();
 }
 
 void Client::end_session(void) {
-  if (this->session == nullptr) return;
-  return this->session->destroy();
+  return this->session.destroy();
 }
 
 std::string Client::get_session_token(void) {
-  if (this->session == nullptr) return "";
-  return this->session->id;
+  return this->session.id;
+}
+
+void Session::load_from_cookie(const std::string &cookie) {
+  const auto &cookies = Srv::Utils::split(cookie, ';');
+  for (const std::string &cookie_str : cookies) {
+    const auto &entries = Srv::Utils::split(Srv::Utils::ltrim(cookie_str), '=');
+    if (entries.size() != 2) continue;
+    if (entries[0] != "MISHSESSID") continue;
+    this->id = entries[1];
+  }
 }
 
 void Session::load(void) {
+  if (this->id != "" && !Server::check_session_id(this->id)) {
+    this->id = "";
+  }
   if (this->id == "") {
     uuid_t uuid;
     uuid_generate(uuid);
@@ -158,5 +167,4 @@ void Session::load(void) {
 
 void Session::destroy(void) {
   Server::destroy_session(this->id);
-  delete this;
 }

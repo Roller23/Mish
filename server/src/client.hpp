@@ -48,6 +48,7 @@ class Session {
     Map data;
     void destroy(void);
     void load(void);
+    void load_from_cookie(const std::string &cookie);
 };
 
 class Client {
@@ -62,7 +63,7 @@ class Client {
     void _close(void);
     bool buffer_ready(void) const;
     void enable_cors(void);
-    Session *session = nullptr;
+    Session session;
   public:
     bool should_enable_cors = false;
     Request req;

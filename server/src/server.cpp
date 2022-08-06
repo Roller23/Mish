@@ -157,5 +157,9 @@ std::unordered_map<std::string, std::string> &Server::load_session(const std::st
 void Server::destroy_session(const std::string &id) {
   // TODO
   std::cout << "destroying session for id: " << id << std::endl;
-  session_storage[id] = {};
+  session_storage.erase(id);
+}
+
+bool Server::check_session_id(const std::string &id) {
+  return session_storage.count(id) != 0;
 }

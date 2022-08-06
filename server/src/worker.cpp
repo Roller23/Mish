@@ -166,6 +166,10 @@ int Worker::handle_client(Client &client) {
     log_request(full_request, Status::NotFound);
     return client.end(Status::NotFound);
   }
+  const std::string &cookie_header = client.req.get_header("Cookie");
+  if (cookie_header != "") {
+    client.session.load_from_cookie(cookie_header);
+  }
   const bool is_index_dir = Path::is_index_directory(path);
   if (is_index_dir && request_path.back() != '/') {
     // redirect

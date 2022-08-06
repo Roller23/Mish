@@ -1082,7 +1082,8 @@ class NativeSessionstart : public NativeFunction {
         VM.throw_runtime_error("session_start() expects no arguments", line);
       }
       VM.client.start_session();
-      VM.client.res.add_header("Set-Cookie", "MISHSESSID=" + VM.client.get_session_token());
+      std::string token = VM.client.get_session_token();
+      VM.client.res.add_header("Set-Cookie", "MISHSESSID=" + token);
       return {Utils::VOID};
     }
 };
