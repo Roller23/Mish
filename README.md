@@ -31,8 +31,14 @@ The following functions were added:
 - `req_header(str key) str` – returns a value from the request headers by the specified key.
 - `code(int) void` – sets the response status code.
 - `decode_uri_component(str component) str` – decodes an encoded URI component and returns it.
-- `cors(void)` – enables cross-origin resource sharing for the particular request.
-- `date(str format[, int timestamp])` – returns a formatted string of the current date. If the second argument is present, the function uses the specified timestamp instead of the current date.
+- `cors(void) void` – enables cross-origin resource sharing for the particular request.
+- `date(str format[, int timestamp]) str` – returns a formatted string of the current date. If the second argument is present, the function uses the specified timestamp instead of the current date.
+- `session_start(void) void` - starts a new session or resumes an existing one for the connected client.
+- `session_end(void) void` - ends and destroys an existing session for the connected client.
+- `session_set(str key, str value) void` - sets the key in the existing session to the given value.
+- `session_get(str key) str` - gets the value for the given key from the existing session.
+- `session_has(str key) bool` - checks if the given key exists in the current session.
+- `session_unset(str key) void` - removes the value for the given key for the current session.
 
 ### Usage
 
