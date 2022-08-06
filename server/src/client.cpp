@@ -5,10 +5,14 @@
 
 #include <cassert>
 #include <unistd.h>
-#include <uuid/uuid.h>
+
+#if defined(__APPLE__)
+  #include <uuid/uuid.h>
+#endif
 
 #include <string>
 #include <vector>
+#include <random>
 #include <algorithm>
 #include <unordered_map>
 
@@ -21,7 +25,13 @@
 #define HEADERS_END "\r\n\r\n"
 #define HEADER_END "\r\n"
 
-static std::string uuid_to_str(uuid_t uuid) {
+#if !defined(__APPLE__)
+  static std::random_device rd;
+  static std::default_random_engine generator(rd());
+  static std::uniform_int_distribution<std::uint64_t> distribution(0, -1);
+#endif
+
+static std::string uuid_to_str(unsigned char *uuid) {
   char str[37] = {};
   uint32_t data1 = *reinterpret_cast<uint32_t *>(uuid);
   uint16_t data2 = *reinterpret_cast<uint16_t *>(uuid + 4);
@@ -31,7 +41,22 @@ static std::string uuid_to_str(uuid_t uuid) {
     data1, data2, data3,
     uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
   );
+  std::cout << "generated: " << str << std::endl;
   return str;
+}
+
+static std::string generate_uuid(void) {
+  #if defined(__APPLE__)
+    uuid_t uuid;
+    uuid_generate(uuid);
+    return uuid_to_str(uuid);
+  #else
+    unsigned char uuid[16];
+    uint64_t *long_uuid = (uint64_t *)uuid;
+    long_uuid[0] = distribution(generator);
+    long_uuid[1] = distribution(generator);
+    return uuid_to_str(uuid);
+  #endif
 }
 
 bool Request::has_headers() const {
@@ -159,9 +184,7 @@ void Session::load(void) {
     this->id = "";
   }
   if (this->id == "") {
-    uuid_t uuid;
-    uuid_generate(uuid);
-    this->id = uuid_to_str(uuid);
+    this->id = generate_uuid();
   }
   Server::load_session(this->id);
 }
