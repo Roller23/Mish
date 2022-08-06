@@ -1,13 +1,16 @@
 #include "client.hpp"
 #include "map.hpp"
 #include "status.hpp"
+#include "server.hpp"
 
 #include <cassert>
 #include <unistd.h>
+#include <uuid/uuid.h>
 
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 #include "../../utils/http.hpp"
 #include "../../utils/utils.hpp"
@@ -16,6 +19,19 @@
 #define HTTP "HTTP/1.0"
 #define HEADERS_END "\r\n\r\n"
 #define HEADER_END "\r\n"
+
+static std::string uuid_to_str(uuid_t uuid) {
+  char str[37] = {};
+  uint32_t data1 = *reinterpret_cast<uint32_t *>(uuid);
+  uint16_t data2 = *reinterpret_cast<uint16_t *>(uuid + 4);
+  uint16_t data3 = *reinterpret_cast<uint16_t *>(uuid + 6);
+  sprintf(str, 
+    "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", 
+    data1, data2, data3,
+    uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
+  );
+  return str;
+}
 
 bool Request::has_headers() const {
   return buffer.find(HEADERS_END) != std::string::npos;
@@ -122,14 +138,20 @@ void Client::start_session(void) {
 }
 
 void Client::end_session(void) {
+  if (this->session == nullptr) return;
   return this->session->destroy();
 }
 
 void Session::load(void) {
-
+  if (this->id == "") {
+    uuid_t uuid;
+    uuid_generate(uuid);
+    this->id = uuid_to_str(uuid);
+  }
+  this->data.map = Server::load_session(this->id);
 }
 
 void Session::destroy(void) {
-  if (this == nullptr) return;
+  Server::destroy_session(this->id);
   delete this;
 }

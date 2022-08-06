@@ -7,6 +7,7 @@
 #include <thread>
 #include <vector>
 #include <filesystem>
+#include <unordered_map>
 
 #include "client.hpp"
 #include "worker.hpp"
@@ -36,6 +37,8 @@ class Server {
     void load_config_args(int argc, char *argv[]);
     void load_config_file(void);
     Worker &get_optimal_worker(int *err = nullptr);
+    static std::unordered_map<std::string, std::string> &load_session(const std::string &id);
+    static void destroy_session(const std::string &id);
     static void serve_http() {
       Server &srv = get();
       return srv.serve(srv.config.port);

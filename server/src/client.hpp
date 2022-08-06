@@ -44,6 +44,7 @@ class Response {
 
 class Session {
   public:
+    std::string id = "";
     Map data;
     void destroy(void);
     void load(void);

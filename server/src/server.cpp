@@ -14,6 +14,7 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
+#include <unordered_map>
 
 #include "server.hpp"
 #include "client.hpp"
@@ -140,4 +141,21 @@ void Server::serve(const int port) {
   }
   std::cout << "Listening on port " << port << "...\n";
   accept_connections();
+}
+
+// TODO: change in-memory session storage to file storage
+static std::unordered_map<std::string, std::unordered_map<std::string, std::string>> session_storage;
+
+std::unordered_map<std::string, std::string> &Server::load_session(const std::string &id) {
+  std::cout << "loading session for id: " << id << std::endl;
+  if (session_storage.count(id) == 0) {
+    session_storage[id] = {};
+  }
+  return session_storage[id];
+}
+
+void Server::destroy_session(const std::string &id) {
+  // TODO
+  std::cout << "destroying session for id: " << id << std::endl;
+  session_storage[id] = {};
 }
