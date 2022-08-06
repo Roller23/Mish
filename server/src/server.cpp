@@ -146,20 +146,32 @@ void Server::serve(const int port) {
 // TODO: change in-memory session storage to file storage
 static std::unordered_map<std::string, std::unordered_map<std::string, std::string>> session_storage;
 
-std::unordered_map<std::string, std::string> &Server::load_session(const std::string &id) {
-  std::cout << "loading session for id: " << id << std::endl;
-  if (session_storage.count(id) == 0) {
+void Server::load_session(const std::string &id) {
+  if (!check_session_id(id)) {
     session_storage[id] = {};
   }
-  return session_storage[id];
 }
 
 void Server::destroy_session(const std::string &id) {
   // TODO
-  std::cout << "destroying session for id: " << id << std::endl;
   session_storage.erase(id);
 }
 
 bool Server::check_session_id(const std::string &id) {
   return session_storage.count(id) != 0;
+}
+
+bool Server::session_has(const std::string &id, const std::string &key) {
+  if (!check_session_id(id)) return false;
+  return session_storage[id].count(key) != 0;
+}
+
+std::string Server::session_get(const std::string &id, const std::string &key) {
+  if (!session_has(id, key)) return "";
+  return session_storage[id][key];
+}
+
+void Server::session_set(const std::string &id, const std::string &key, const std::string &value) {
+  if (!check_session_id(id)) return;
+  session_storage[id][key] = value;
 }

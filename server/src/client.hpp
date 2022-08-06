@@ -45,7 +45,6 @@ class Response {
 class Session {
   public:
     std::string id = "";
-    Map data;
     void destroy(void);
     void load(void);
     void load_from_cookie(const std::string &cookie);
@@ -73,6 +72,9 @@ class Client {
     void start_session(void);
     void end_session(void);
     std::string get_session_token(void);
+    void session_set(const std::string &key, const std::string &value);
+    std::string session_get(const std::string &key) const;
+    bool session_has(const std::string &key) const;
 };
 
 #endif // __CLIENT_

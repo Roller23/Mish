@@ -1099,6 +1099,41 @@ class NativeSessionend : public NativeFunction {
     }
 };
 
+class NativeSessionset : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 2 || args[0].type != Utils::STR || args[1].type != Utils::STR) {
+        VM.throw_runtime_error("session_set() expects two arguments (str, str)", line);
+      }
+      VM.client.session_set(args[0].string_value, args[1].string_value);
+      return {Utils::VOID};
+    }
+};
+
+class NativeSessionget : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("session_get() expects one argument (str)", line);
+      }
+      Value res(Utils::STR);
+      res.string_value = VM.client.session_get(args[0].string_value);
+      return res;
+    }
+};
+
+class NativeSessionhas : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 1 || args[0].type != Utils::STR) {
+        VM.throw_runtime_error("session_has() expects one argument (str)", line);
+      }
+      Value res(Utils::BOOL);
+      res.boolean_value = VM.client.session_has(args[0].string_value);
+      return res;
+    }
+};
+
 // used only for math functions
 
 REG_FN(NativeSin, sin)
@@ -1116,7 +1151,7 @@ REG_FN(NativeCeil, ceil)
 REG_FN(NativeRound, round)
 
 void CVM::load_stdlib(void) {
-  globals.reserve(56);
+  globals.reserve(60);
   ADD_FN(NativeTimestamp, timestamp)
   ADD_FN(NativeEcho, echo)
   ADD_FN(NativeRender, render)
@@ -1175,4 +1210,7 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeHtmlescape, html_escape);
   ADD_FN(NativeSessionstart, session_start);
   ADD_FN(NativeSessionend, session_end);
+  ADD_FN(NativeSessionset, session_set);
+  ADD_FN(NativeSessionget, session_get);
+  ADD_FN(NativeSessionhas, session_has);
 }

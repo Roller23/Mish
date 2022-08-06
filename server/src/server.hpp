@@ -37,9 +37,12 @@ class Server {
     void load_config_args(int argc, char *argv[]);
     void load_config_file(void);
     Worker &get_optimal_worker(int *err = nullptr);
-    static std::unordered_map<std::string, std::string> &load_session(const std::string &id);
+    static void load_session(const std::string &id);
     static void destroy_session(const std::string &id);
     static bool check_session_id(const std::string &id);
+    static bool session_has(const std::string &id, const std::string &key);
+    static std::string session_get(const std::string &id, const std::string &key);
+    static void session_set(const std::string &id, const std::string &key, const std::string &value);
     static void serve_http() {
       Server &srv = get();
       return srv.serve(srv.config.port);

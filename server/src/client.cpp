@@ -143,6 +143,7 @@ std::string Client::get_session_token(void) {
   return this->session.id;
 }
 
+// TODO: refactor cookie parsing
 void Session::load_from_cookie(const std::string &cookie) {
   const auto &cookies = Srv::Utils::split(cookie, ';');
   for (const std::string &cookie_str : cookies) {
@@ -162,9 +163,20 @@ void Session::load(void) {
     uuid_generate(uuid);
     this->id = uuid_to_str(uuid);
   }
-  this->data.map = Server::load_session(this->id);
+  Server::load_session(this->id);
 }
 
 void Session::destroy(void) {
   Server::destroy_session(this->id);
+}
+
+void Client::session_set(const std::string &key, const std::string &value) {
+  Server::session_set(this->session.id, key, value);
+}
+std::string Client::session_get(const std::string &key) const {
+  return Server::session_get(this->session.id, key);
+}
+
+bool Client::session_has(const std::string &key) const {
+  return Server::session_has(this->session.id, key);
 }
