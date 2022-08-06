@@ -42,6 +42,13 @@ class Response {
     }
 };
 
+class Session {
+  public:
+    Map data;
+    void destroy(void);
+    void load(void);
+};
+
 class Client {
   friend class Server;
   friend class Worker;
@@ -54,12 +61,15 @@ class Client {
     void _close(void);
     bool buffer_ready(void) const;
     void enable_cors(void);
+    Session *session = nullptr;
   public:
     bool should_enable_cors = false;
     Request req;
     Response res;
     int end(const int code = Status::OK, const std::string &str = "", bool ignore_buffer = false);
     int write_and_attempt_close(void);
+    void start_session(void);
+    void end_session(void);
 };
 
 #endif // __CLIENT_

@@ -1081,6 +1081,18 @@ class NativeSessionstart : public NativeFunction {
       if (args.size() != 0) {
         VM.throw_runtime_error("session_start() expects no arguments", line);
       }
+      VM.client.start_session();
+      return {Utils::VOID};
+    }
+};
+
+class NativeSessionend : public NativeFunction {
+  public:
+    Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
+      if (args.size() != 0) {
+        VM.throw_runtime_error("session_end() expects no arguments", line);
+      }
+      VM.client.end_session();
       return {Utils::VOID};
     }
 };
@@ -1160,4 +1172,5 @@ void CVM::load_stdlib(void) {
   ADD_FN(NativeSameref, same_ref);
   ADD_FN(NativeHtmlescape, html_escape);
   ADD_FN(NativeSessionstart, session_start);
+  ADD_FN(NativeSessionend, session_end);
 }

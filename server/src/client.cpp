@@ -113,3 +113,23 @@ int Client::end(const int code, const std::string &str, bool ignore_buffer) {
   res.end(code, str, ignore_buffer);
   return write_and_attempt_close();
 }
+
+void Client::start_session(void) {
+  if (this->session == nullptr) {
+    this->session = new Session();
+  }
+  this->session->load();
+}
+
+void Client::end_session(void) {
+  return this->session->destroy();
+}
+
+void Session::load(void) {
+
+}
+
+void Session::destroy(void) {
+  if (this == nullptr) return;
+  delete this;
+}
