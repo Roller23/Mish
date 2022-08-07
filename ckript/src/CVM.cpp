@@ -642,7 +642,6 @@ class NativeAbs : public NativeFunction {
     }
 };
 
-// TODO: export generators to globals
 class NativeRand : public NativeFunction {
   public:
     Value execute(std::vector<Value> &args, std::int64_t line, CVM &VM) {
@@ -650,8 +649,8 @@ class NativeRand : public NativeFunction {
         VM.throw_runtime_error("rand() expects two arguments (int, int)", line);
       }
       Value val(Utils::INT);
-      std::random_device rd;
-      std::default_random_engine generator(rd());
+      static std::random_device rd;
+      static std::default_random_engine generator(rd());
       std::uniform_int_distribution<std::int64_t> distribution(
         args[0].number_value, args[1].number_value
       );
@@ -667,8 +666,8 @@ class NativeRandf : public NativeFunction {
         VM.throw_runtime_error("randf() expects two arguments (double, double)", line);
       }
       Value val(Utils::FLOAT);
-      std::random_device rd;
-      std::default_random_engine generator(rd());
+      static std::random_device rd;
+      static std::default_random_engine generator(rd());
       std::uniform_real_distribution<double> distribution(
         args[0].float_value, args[1].float_value
       );

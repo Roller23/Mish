@@ -25,12 +25,6 @@
 #define HEADERS_END "\r\n\r\n"
 #define HEADER_END "\r\n"
 
-#if !defined(__APPLE__)
-  static std::random_device rd;
-  static std::default_random_engine generator(rd());
-  static std::uniform_int_distribution<std::uint64_t> distribution(0, -1);
-#endif
-
 static std::string uuid_to_str(unsigned char *uuid) {
   char str[37] = {};
   uint32_t data1 = *reinterpret_cast<uint32_t *>(uuid);
@@ -52,6 +46,9 @@ static std::string generate_uuid(void) {
   #else
     unsigned char uuid[16];
     uint64_t *long_uuid = (uint64_t *)uuid;
+    static std::random_device rd;
+    static std::default_random_engine generator(rd());
+    static std::uniform_int_distribution<std::uint64_t> distribution(0, -1);
     long_uuid[0] = distribution(generator);
     long_uuid[1] = distribution(generator);
     return uuid_to_str(uuid);
