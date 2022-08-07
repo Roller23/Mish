@@ -11,12 +11,14 @@ class Request {
     Map query;
     Map headers;
     Map body;
+    Map cookies;
     std::string buffer = "";
     std::string raw_body = "";
     std::size_t length = 0;
     std::string method;
 
     std::string get_header(const std::string &key) const;
+    void parse_cookies(const std::string &cookies);
 
     bool has_headers() const;
     bool has_body() const;
@@ -47,7 +49,6 @@ class Session {
     std::string id = "";
     void destroy(void);
     void load(void);
-    void load_from_cookie(const std::string &cookie);
 };
 
 class Client {

@@ -69,6 +69,15 @@ bool Request::has_body() const {
   return buffer.length() - headers_length == std::stoi(get_header("Content-Length"));
 }
 
+void Request::parse_cookies(const std::string &cookie_header) {
+  const auto &cookies = Srv::Utils::split(cookie_header, ';');
+  for (const std::string &cookie_str : cookies) {
+    const auto &entries = Srv::Utils::split(Srv::Utils::ltrim(cookie_str), '=');
+    if (entries.size() != 2) continue;
+    this->cookies.map[entries[0]] = entries[1];
+  }
+}
+
 std::string Request::get_header(const std::string &key) const {
   const auto it = headers.map.find(Srv::Utils::to_lower(key));
   if (it == headers.map.end()) {
@@ -162,17 +171,6 @@ void Client::end_session(void) {
 
 std::string Client::get_session_token(void) {
   return this->session.id;
-}
-
-// TODO: refactor cookie parsing
-void Session::load_from_cookie(const std::string &cookie) {
-  const auto &cookies = Srv::Utils::split(cookie, ';');
-  for (const std::string &cookie_str : cookies) {
-    const auto &entries = Srv::Utils::split(Srv::Utils::ltrim(cookie_str), '=');
-    if (entries.size() != 2) continue;
-    if (entries[0] != "MISHSESSID") continue;
-    this->id = entries[1];
-  }
 }
 
 void Session::load(void) {

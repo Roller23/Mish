@@ -168,7 +168,10 @@ int Worker::handle_client(Client &client) {
   }
   const std::string &cookie_header = client.req.get_header("Cookie");
   if (cookie_header != "") {
-    client.session.load_from_cookie(cookie_header);
+    client.req.parse_cookies(cookie_header);
+  }
+  if (client.req.cookies.has("MISHSESSID")) {
+    client.session.id = client.req.cookies.get("MISHSESSID");
   }
   const bool is_index_dir = Path::is_index_directory(path);
   if (is_index_dir && request_path.back() != '/') {
