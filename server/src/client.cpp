@@ -45,7 +45,6 @@ static std::string generate_uuid(void) {
   #if defined(__APPLE__)
     uuid_t uuid;
     uuid_generate(uuid);
-    return uuid_to_str(uuid);
   #else
     unsigned char uuid[16];
     uint64_t *long_uuid = (uint64_t *)uuid;
@@ -54,8 +53,8 @@ static std::string generate_uuid(void) {
     static std::uniform_int_distribution<std::uint64_t> distribution(0, -1);
     long_uuid[0] = distribution(generator);
     long_uuid[1] = distribution(generator);
-    return uuid_to_str(uuid);
   #endif
+  return uuid_to_str(uuid);
 }
 
 bool Request::has_headers() const {
