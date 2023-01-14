@@ -25,12 +25,15 @@
 #define HEADERS_END "\r\n\r\n"
 #define HEADER_END "\r\n"
 
+#define UUID_SIZE 36
+
 static std::string uuid_to_str(unsigned char *uuid) {
-  char str[37] = {};
+  char str[UUID_SIZE + 1] = {};
   uint32_t data1 = *reinterpret_cast<uint32_t *>(uuid);
   uint16_t data2 = *reinterpret_cast<uint16_t *>(uuid + 4);
   uint16_t data3 = *reinterpret_cast<uint16_t *>(uuid + 6);
-  sprintf(str, 
+  snprintf(str,
+    UUID_SIZE + 1,
     "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", 
     data1, data2, data3,
     uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
