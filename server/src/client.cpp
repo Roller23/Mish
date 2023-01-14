@@ -42,11 +42,10 @@ static std::string uuid_to_str(unsigned char *uuid) {
 }
 
 static std::string generate_uuid(void) {
+  unsigned char uuid[16];
   #if defined(__APPLE__)
-    uuid_t uuid;
     uuid_generate(uuid);
   #else
-    unsigned char uuid[16];
     uint64_t *long_uuid = (uint64_t *)uuid;
     static std::random_device rd;
     static std::default_random_engine generator(rd());
